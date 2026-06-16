@@ -1,34 +1,20 @@
-import { Tabs } from 'expo-router';
-import React from 'react';
+import Feather from '@expo/vector-icons/Feather';
+import { Tabs } from "expo-router";
 
-import { HapticTab } from '@/components/haptic-tab';
-import { IconSymbol } from '@/components/ui/icon-symbol';
-import { Colors } from '@/constants/theme';
-import { useColorScheme } from '@/hooks/use-color-scheme';
-
-export default function TabLayout() {
-  const colorScheme = useColorScheme();
-
+export default function TabsLayout() {
   return (
-    <Tabs
-      screenOptions={{
-        tabBarActiveTintColor: Colors[colorScheme ?? 'light'].tint,
-        headerShown: false,
-        tabBarButton: HapticTab,
-      }}>
-      <Tabs.Screen
-        name="index"
-        options={{
-          title: 'Home',
-          tabBarIcon: ({ color }) => <IconSymbol size={28} name="house.fill" color={color} />,
-        }}
-      />
-      <Tabs.Screen
-        name="explore"
-        options={{
-          title: 'Explore',
-          tabBarIcon: ({ color }) => <IconSymbol size={28} name="paperplane.fill" color={color} />,
-        }}
+    <Tabs screenOptions={{ tabBarActiveTintColor: "tomato" }}>
+      <Tabs.Screen name="index" options={{
+        title: "Summary", tabBarIcon(props) {
+          return <Feather name="home" size={24} color={props.color} />
+        },
+      }} />
+
+      <Tabs.Screen name="profile" options={{
+        title: "Profile", tabBarIcon(props) {
+          return <Feather name="user" size={24} color={props.color} />
+        },
+      }}
       />
     </Tabs>
   );
