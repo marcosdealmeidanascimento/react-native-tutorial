@@ -10,6 +10,12 @@ export default function TabsLayout() {
         },
       }} />
 
+      <Tabs.Screen name="payments" options={{
+        title: "Payments", tabBarIcon(props) {
+          return <Feather name="credit-card" size={24} color={props.color} />
+        },
+      }} />
+
       <Tabs.Screen name="profile" options={{
         title: "Profile", tabBarIcon(props) {
           return <Feather name="user" size={24} color={props.color} />

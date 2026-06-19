@@ -12,6 +12,7 @@ interface UpdateUser {
 
 export default function ProfileScreen() {
     const { user } = useAuth();
+    const { logout } = useAuth();
     const [newName, setNewName] = useState<string>("");
     const [newEmail, setNewEmail] = useState<string>("");
     const [newPassword, setNewPassword] = useState<string>("");
@@ -19,6 +20,7 @@ export default function ProfileScreen() {
     const [visible, setVisible] = useState(false);
     const [responseText, setResponseText] = useState<string>("");
     const [error, setError] = useState<string>("");
+
 
     const handleUpdate = async () => {
         let newUser: UpdateUser = { name: newName ? newName : user.name, email: newEmail ? newEmail : user.email, password: null };
@@ -40,8 +42,8 @@ export default function ProfileScreen() {
     return (
         <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : "height"} style={styleSheet.container}>
             <View style={styleSheet.header}>
-                <Avatar.Text size={75} label={user?.name[0]} style={styleSheet.avatar} />
-                <Text style={{ marginRight: 16 }}>{user?.name}</Text>
+                <Avatar.Text size={75} label={user?.name.split(" ")[0][0] + user?.name.split(" ")[1][0]} style={styleSheet.avatar} />
+                <Text style={{ marginRight: 16, fontWeight: "bold", fontSize: 24 }}>{user?.name}</Text>
                 <Text>{user?.email}</Text>
             </View>
             <View>
@@ -58,6 +60,9 @@ export default function ProfileScreen() {
                 <Button mode="contained" style={styleSheet.button} onPress={handleUpdate}>Update</Button>
             </View>
             <Snackbar visible={visible} action={{ label: "Close", onPress: () => { } }} onDismiss={() => setVisible(false)} >{responseText}</Snackbar>
+            <View style={{ marginBottom: 16, alignItems: "center" }}>
+                <Button onPress={logout} icon="logout">Logout</Button>
+            </View>
         </KeyboardAvoidingView>
     );
 }
