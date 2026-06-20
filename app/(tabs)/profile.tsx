@@ -1,3 +1,4 @@
+import AppHeader from "@/components/header";
 import { apiClient } from "@/config/api";
 import { useAuth } from "@/config/auth";
 import { useState } from "react";
@@ -41,6 +42,7 @@ export default function ProfileScreen() {
 
     return (
         <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : "height"} style={styleSheet.container}>
+            <AppHeader title="Profile" />
             <View style={styleSheet.header}>
                 <Avatar.Text size={75} label={user?.name.split(" ")[0][0] + user?.name.split(" ")[1][0]} style={styleSheet.avatar} />
                 <Text style={{ marginRight: 16, fontWeight: "bold", fontSize: 24 }}>{user?.name}</Text>

@@ -1,3 +1,4 @@
+import AppHeader from "@/components/header";
 import { apiClient } from "@/config/api";
 import { useAuth } from "@/config/auth";
 import { Feather } from "@expo/vector-icons";
@@ -91,6 +92,7 @@ export default function PaymentsScreen() {
 
     return (
         <View>
+            <AppHeader title="Payments" />
             <FlatList
                 ref={flatListRef}
                 data={payments}
@@ -118,7 +120,7 @@ const styles = StyleSheet.create({
     fab: {
         position: "absolute",
         right: 16,
-        bottom: 16,
+        bottom: 160,
     },
     card: {
         marginHorizontal: 16,

@@ -1,3 +1,4 @@
+import Logo from "@/components/logo";
 import { apiClient } from "@/config/api";
 import { useAuth } from "@/config/auth";
 import { useState } from "react";
@@ -16,7 +17,11 @@ export default function authScreen() {
 
     const handleSwitchMode = () => {
         setIsSignUp((prev: boolean) => !prev);
+
         setError("");
+        setName("");
+        setEmail("");
+        setPassword("");
     };
 
     const handleAuth = async () => {
@@ -47,47 +52,69 @@ export default function authScreen() {
     return (
         <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : "height"} style={styleSheet.container}>
             <View style={styleSheet.content}>
-                <Text style={styleSheet.title} variant="headlineLarge">{isSignUp ? "Create an account" : "Welcome back"}</Text>
+                <View style={styleSheet.logoContainer}>
+                    <Logo width={120} height={120} />
+                    <Text variant="headlineMedium" style={styleSheet.title}>
+                        Finance Dashboard
+                    </Text>
+                    <Text
+                        variant="bodyMedium"
+                        style={styleSheet.subtitle}
+                    >
+                        Track your finances with confidence
+                    </Text>
+                </View>
+                {/* <Text style={styleSheet.title} variant="headlineLarge">{isSignUp ? "Create an account" : "Welcome back"}</Text> */}
+                <View style={styleSheet.formCard}>
+                    {isSignUp && (
+                        <TextInput
+                            label="Name"
+                            autoCapitalize="words"
+                            placeholder="Your name"
+                            mode="outlined"
+                            style={styleSheet.input}
+                            value={name}
+                            onChangeText={setName}
+                        />
+                    )}
 
-                <TextInput {...(!isSignUp && { disabled: true })}
-                    label="Name"
-                    autoCapitalize="none"
-                    placeholder="Name"
-                    mode="outlined"
-                    style={styleSheet.input}
-                    onChangeText={setName}
-                />
+                    <TextInput
+                        label="Email"
+                        autoCapitalize="none"
+                        keyboardType="email-address"
+                        placeholder="example@gmail.com"
+                        mode="outlined"
+                        style={styleSheet.input}
+                        onChangeText={setEmail}
+                    />
 
-                <TextInput
-                    label="Email"
-                    autoCapitalize="none"
-                    keyboardType="email-address"
-                    placeholder="example@gmail.com"
-                    mode="outlined"
-                    style={styleSheet.input}
-                    onChangeText={setEmail}
-                />
+                    <TextInput
+                        label="Password"
+                        secureTextEntry
+                        mode="outlined"
+                        placeholder="Password"
+                        autoCapitalize="none"
+                        style={styleSheet.input}
+                        onChangeText={setPassword}
+                    />
+                    {error && <View style={styleSheet.errorContainer}>
+                        <Text style={styleSheet.errorText}>
+                            {error}
+                        </Text>
+                    </View>}
+                    <Button
+                        mode="contained"
+                        style={styleSheet.button}
+                        contentStyle={{
+                            height: 56,
+                        }}
+                        onPress={handleAuth}
+                    >
+                        {isSignUp ? "Sign Up" : "Login"}
+                    </Button>
+                    <Button style={styleSheet.button} mode="text" onPress={handleSwitchMode}>{isSignUp ? "Already have an account? Login" : "Don't have an account? Sign Up"}</Button>
+                </View>
 
-                <TextInput
-                    label="Password"
-                    secureTextEntry
-                    mode="outlined"
-                    placeholder="Password"
-                    autoCapitalize="none"
-                    style={styleSheet.input}
-                    onChangeText={setPassword}
-                />
-
-                {error && <Text style={{ color: theme.colors.error, marginTop: 5 }}>{error}</Text>}
-
-                <Button
-                    mode="contained"
-                    style={styleSheet.button}
-                    onPress={handleAuth}
-                >
-                    {isSignUp ? "Sign Up" : "Login"}
-                </Button>
-                <Button mode="text" onPress={handleSwitchMode}>{isSignUp ? "Already have an account? Login" : "Don't have an account? Sign Up"}</Button>
             </View>
         </KeyboardAvoidingView>
     );
@@ -96,7 +123,7 @@ export default function authScreen() {
 const styleSheet = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: "#f5f5f5"
+        backgroundColor: "#F8FAFC"
     },
     content: {
         flex: 1,
@@ -107,9 +134,41 @@ const styleSheet = StyleSheet.create({
         textAlign: "center"
     },
     input: {
-        marginTop: 16
+        marginTop: 20,
+        backgroundColor: "#fff",
     },
     button: {
         marginTop: 16
     },
+    logoContainer: {
+        alignItems: "center",
+        marginTop: 16
+    },
+    subtitle: {
+        marginTop: 8,
+        opacity: 0.6,
+        textAlign: "center"
+    },
+    formCard: {
+        backgroundColor: "#fff",
+        padding: 24,
+        marginTop: 32,
+        elevation: 8,
+        borderRadius: 16,
+    },
+    form: {
+        marginTop: 32,
+    },
+    errorContainer: {
+        marginTop: 16,
+    },
+    errorText: {
+        color: "red",
+        textAlign: "center",
+    },
+    signUpContainer: {
+        flexDirection: "row",
+        justifyContent: "center",
+        marginTop: 16
+    }
 });
