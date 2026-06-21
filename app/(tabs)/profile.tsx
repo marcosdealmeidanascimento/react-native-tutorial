@@ -12,17 +12,15 @@ interface UpdateUser {
 }
 
 export default function ProfileScreen() {
-    const { user } = useAuth();
+    const { user, profilePicture } = useAuth();
     const { logout } = useAuth();
     const [newName, setNewName] = useState<string>("");
     const [newEmail, setNewEmail] = useState<string>("");
     const [newPassword, setNewPassword] = useState<string>("");
-    const image = "https://www.stockinvestor.com/wp-content/uploads/shutterstock_124509472.jpg";
 
     const [visible, setVisible] = useState(false);
     const [responseText, setResponseText] = useState<string>("");
     const [error, setError] = useState<string>("");
-
 
     const handleUpdate = async () => {
         let newUser: UpdateUser = { name: newName ? newName : user.name, email: newEmail ? newEmail : user.email, password: null };
@@ -46,8 +44,8 @@ export default function ProfileScreen() {
             <AppHeader title="Profile" />
             <View style={styleSheet.header}>
                 <View style={styleSheet.avatarWrapper}>
-                    {image && <Image source={{ uri: image }} style={styleSheet.avatarImage} />}
-                    {!image && <Avatar.Text size={100} label={user?.name.split(" ")[0][0] + user?.name.split(" ")[1][0]} style={styleSheet.avatarImage} />}
+                    {profilePicture && <Image source={{ uri: profilePicture.url }} style={styleSheet.avatarImage} />}
+                    {!profilePicture && <Avatar.Text size={100} label={user?.name.split(" ")[0][0] + user?.name.split(" ")[1][0]} />}
                 </View>
                 <Text style={{ marginRight: 16, fontWeight: "bold", fontSize: 24 }}>{user?.name}</Text>
                 <Text>{user?.email}</Text>

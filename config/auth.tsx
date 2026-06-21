@@ -3,6 +3,7 @@ import { clearStoredToken, getStoredToken, storeAccessToken, storeRefreshToken }
 
 interface AuthContextType {
   user: any | null;
+  profilePicture: any | null;
   isAuth: boolean;
   loading: boolean;
   login: (email: string, password: string) => Promise<void>;
@@ -16,6 +17,7 @@ const API_URL = process.env.EXPO_PUBLIC_BACKEND_URL;
 
 export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [user, setUser] = useState<any | null>(null);
+  const [profilePicture, setProfilePicture] = useState<any | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -25,6 +27,8 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         if (token) {
           const userData = await fetchUserData(token);
           setUser(userData);
+          const profilePicture = await getProfilePicture(token);
+          setProfilePicture(profilePicture);
         }
       } catch (e) {
         await clearStoredToken();
@@ -43,6 +47,14 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     return await response.json();
   };
 
+  const getProfilePicture = async (token: string) => {
+    const response = await fetch(`${API_URL}/users/profile-picture`, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    if (!response.ok) throw new Error();
+    return await response.json();
+  }
+
   const login = async (email: string, password: string) => {
     try {
       const response = await fetch(`${API_URL}/auth/login`, {
@@ -60,6 +72,9 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
       const userData = await fetchUserData(data.accessToken);
       setUser(userData);
+
+      const profilePicture = await getProfilePicture(data.accessToken);
+      setProfilePicture(profilePicture.url);
 
     } catch (error) {
       throw new Error("Login failed");
@@ -92,7 +107,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const isAuth = !!user;
 
   return (
-    <AuthContext.Provider value={{ user, isAuth, loading, login, register, logout }}>
+    <AuthContext.Provider value={{ user, isAuth, loading, login, register, logout, profilePicture }}>
       {children}
     </AuthContext.Provider>
   );
