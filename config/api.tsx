@@ -63,15 +63,24 @@ export const apiClient = async (
   try {
     let token = await getStoredToken();
 
-    const headers = {
-      "Content-Type": "application/json",
+    const isFormData = body instanceof FormData;
+
+    const headers: Record<string, string> = {
       Authorization: `Bearer ${token}`,
     };
+
+    if (!isFormData) {
+      headers["Content-Type"] = "application/json";
+    }
 
     const config = {
       method,
       headers,
-      body: body ? JSON.stringify(body) : null,
+      body: body
+        ? isFormData
+          ? body
+          : JSON.stringify(body)
+        : null,
     };
 
     let response = await fetch(`${API_URL}/${endpoint}`, config);
@@ -85,7 +94,8 @@ export const apiClient = async (
     }
 
     if (!response.ok) {
-      throw new Error(response.statusText);
+      const errorText = await response.text();
+      throw new Error(errorText);
     }
 
     return await response.json();

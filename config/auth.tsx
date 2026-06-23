@@ -3,6 +3,7 @@ import { clearStoredToken, getStoredToken, storeAccessToken, storeRefreshToken }
 
 interface AuthContextType {
   user: any | null;
+  refreshUser: () => Promise<void>;
   profilePicture: any | null;
   isAuth: boolean;
   loading: boolean;
@@ -38,6 +39,20 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     }
     loadStorageData();
   }, []);
+
+  const refreshUser = async () => {
+    const token = await getStoredToken();
+
+    if (!token) {
+      return;
+    }
+
+    const userData = await fetchUserData(token);
+    setUser(userData);
+
+    const picture = await getProfilePicture(token);
+    setProfilePicture(picture);
+  };
 
   const fetchUserData = async (token: string) => {
     const response = await fetch(`${API_URL}/users/me`, {
@@ -107,7 +122,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const isAuth = !!user;
 
   return (
-    <AuthContext.Provider value={{ user, isAuth, loading, login, register, logout, profilePicture }}>
+    <AuthContext.Provider value={{ user, isAuth, loading, login, register, logout, profilePicture, refreshUser }}>
       {children}
     </AuthContext.Provider>
   );
