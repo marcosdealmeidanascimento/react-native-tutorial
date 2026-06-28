@@ -76,8 +76,9 @@ export function PaymentCard({ payment }: any) {
 export default function PaymentsScreen() {
     const { user } = useAuth();
     const [payments, setPayments] = useState<any>([]);
-    const [page, setPage] = useState<Number>(0);
+    const [page, setPage] = useState(0);
     const [status, setStatus] = useState<String | null>(null);
+    const statusRef = useRef<string | null>(null);
     const [visible, setVisible] = useState<boolean>(false);
 
     const flatListRef = useRef(null);
@@ -85,7 +86,7 @@ export default function PaymentsScreen() {
     const handleFilter = (newStatus: string | null) => {
         setStatus(newStatus);
         setPage(0);
-        handleGetPayments(0, newStatus);
+        flatListRef.current?.scrollToOffset({ offset: 0, animated: true });
     };
 
     const handleGetPayments = async (
@@ -109,9 +110,10 @@ export default function PaymentsScreen() {
         }
     };
 
+
     useEffect(() => {
-        handleGetPayments();
-    }, []);
+        handleGetPayments(page, status);
+    }, [page, status]);
 
     return (
         <View>
@@ -170,9 +172,7 @@ export default function PaymentsScreen() {
                     <PaymentCard payment={item} />
                 )}
                 onEndReached={() => {
-                    const nextPage = page + 1;
-                    setPage(nextPage);
-                    handleGetPayments(nextPage);
+                    setPage(prev => prev + 1);
                 }}
             />
             <FAB style={styles.fab} icon="arrow-up" onPress={() => {
