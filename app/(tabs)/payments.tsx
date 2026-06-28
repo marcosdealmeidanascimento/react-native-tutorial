@@ -4,11 +4,14 @@ import { useAuth } from "@/config/auth";
 import { Feather } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import { useEffect, useRef, useState } from "react";
-import { FlatList, StyleSheet, View } from "react-native";
+import { FlatList, StyleSheet, TouchableOpacity, View } from "react-native";
 import { Card, Chip, FAB, Text } from "react-native-paper";
 
 export function PaymentCard({ payment }: any) {
     const paid = payment.status === "PAID";
+    const pending = payment.status === "PENDING";
+    const failed = payment.status === "FAILED";
+    const cancelled = payment.status === "CANCELLED";
 
     return (
         <Card style={styles.card}>
@@ -16,7 +19,7 @@ export function PaymentCard({ payment }: any) {
                 colors={
                     paid
                         ? ["#0f766e", "#14b8a6"]
-                        : ["#312e81", "#6366f1"]
+                        : pending ? ["#fbbf24", "#f59e0b"] : failed ? ["#b6b6b6", "#a3a3a3"] : cancelled ? ["#f87171", "#ef4444"] : ["#312e81", "#6366f1"]
                 }
                 start={{ x: 0, y: 0 }}
                 end={{ x: 1, y: 1 }}
@@ -72,19 +75,39 @@ export function PaymentCard({ payment }: any) {
 
 export default function PaymentsScreen() {
     const { user } = useAuth();
-    const [payments, setPayments] = useState([]);
-    const [page, setPage] = useState(0);
+    const [payments, setPayments] = useState<any>([]);
+    const [page, setPage] = useState<Number>(0);
+    const [status, setStatus] = useState<String | null>(null);
+    const [visible, setVisible] = useState<boolean>(false);
 
     const flatListRef = useRef(null);
 
-    const handleGetPayments = async (page: number = 0) => {
+    const handleFilter = (newStatus: string | null) => {
+        setStatus(newStatus);
+        setPage(0);
+        handleGetPayments(0, newStatus);
+    };
+
+    const handleGetPayments = async (
+        page: number = 0,
+        status: string | null = null
+    ) => {
+        const sort = "dueDate,desc";
+        let endpoint = `payment?page=${page}&size=10&sort=${sort}`;
+        if (status) {
+            endpoint += `&status=${status}`;
+        }
         try {
-            const response = await apiClient(`payment?page=${page}&size=10`, "GET", null);
-            setPayments(old => [...old, ...response.content]);
+            const response = await apiClient(endpoint, "GET");
+            if (page === 0) {
+                setPayments(response.content);
+            } else {
+                setPayments(old => [...old, ...response.content]);
+            }
         } catch (error) {
             console.log(error);
         }
-    }
+    };
 
     useEffect(() => {
         handleGetPayments();
@@ -93,6 +116,52 @@ export default function PaymentsScreen() {
     return (
         <View>
             <AppHeader title="Payments" />
+            <View style={styles.filterContainer}>
+                <TouchableOpacity
+                    style={styles.filterButton}
+                    onPress={() => setVisible(!visible)}
+                >
+                    <Feather name="filter" size={20} color="#4F46E5" />
+
+                    <Text style={styles.filterText}>
+                        {status ?? "All"}
+                    </Text>
+
+                    <Feather
+                        name={visible ? "chevron-up" : "chevron-down"}
+                        size={18}
+                        color="#4F46E5"
+                    />
+                </TouchableOpacity>
+
+                {visible && (
+                    <View style={styles.dropdown}>
+                        {[
+                            null,
+                            "PAID",
+                            "PENDING",
+                            "FAILED",
+                            "CANCELLED",
+                        ].map(item => (
+                            <TouchableOpacity
+                                key={item ?? "ALL"}
+                                style={[
+                                    styles.dropdownItem,
+                                    status === item && styles.selectedItem,
+                                ]}
+                                onPress={() => {
+                                    handleFilter(item);
+                                    setVisible(false);
+                                }}
+                            >
+                                <Text style={styles.dropdownText}>
+                                    {item ?? "ALL"}
+                                </Text>
+                            </TouchableOpacity>
+                        ))}
+                    </View>
+                )}
+            </View>
             <FlatList
                 ref={flatListRef}
                 data={payments}
@@ -117,6 +186,52 @@ export default function PaymentsScreen() {
 }
 
 const styles = StyleSheet.create({
+    filterContainer: {
+        paddingHorizontal: 16,
+        alignItems: "flex-end",
+        marginBottom: 8,
+        zIndex: 10,
+    },
+
+    filterButton: {
+        flexDirection: "row",
+        alignItems: "center",
+        gap: 8,
+        backgroundColor: "#fff",
+        paddingHorizontal: 16,
+        paddingVertical: 10,
+        borderRadius: 16,
+        elevation: 5,
+        marginTop: 8,
+    },
+
+    filterText: {
+        color: "#4F46E5",
+        fontWeight: "700",
+    },
+
+    dropdown: {
+        position: "absolute",
+        top: 55,
+        width: 180,
+        backgroundColor: "#fff",
+        borderRadius: 18,
+        elevation: 8,
+        overflow: "hidden",
+    },
+
+    dropdownItem: {
+        paddingVertical: 14,
+        paddingHorizontal: 16,
+    },
+
+    selectedItem: {
+        backgroundColor: "#EEF2FF",
+    },
+
+    dropdownText: {
+        fontWeight: "600",
+    },
     fab: {
         position: "absolute",
         right: 16,
