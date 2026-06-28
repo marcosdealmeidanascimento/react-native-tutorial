@@ -46,7 +46,7 @@ export function PaymentCard({ payment }: any) {
                 </View>
 
                 <Text style={styles.amount}>
-                    R$ {Number(payment.amount).toFixed(2)}
+                    $ {Number(payment.amount).toFixed(2)}
                 </Text>
 
                 <View style={styles.footer}>
