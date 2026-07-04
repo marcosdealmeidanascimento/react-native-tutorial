@@ -1,6 +1,7 @@
 import { createContext, useContext, useEffect, useState } from "react";
 import { clearStoredToken, getStoredToken, storeAccessToken, storeRefreshToken } from "./api";
 
+
 interface AuthContextType {
   user: any | null;
   refreshUser: () => Promise<void>;
@@ -66,7 +67,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     const response = await fetch(`${API_URL}/users/profile-picture`, {
       headers: { Authorization: `Bearer ${token}` },
     });
-    if (!response.ok) throw new Error();
+    if (!response.ok) return null;
     return await response.json();
   }
 
