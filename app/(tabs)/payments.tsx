@@ -1,75 +1,84 @@
+import CreatePaymentModal from "@/components/CreatePaymentModal";
 import AppHeader from "@/components/header";
+import PaymentModal from "@/components/PaymentModal";
 import { apiClient } from "@/config/api";
 import { useAuth } from "@/config/auth";
 import { Feather } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import { useEffect, useRef, useState } from "react";
-import { FlatList, StyleSheet, TouchableOpacity, View } from "react-native";
+import { FlatList, Pressable, StyleSheet, TouchableOpacity, View } from "react-native";
 import { Card, Chip, FAB, Text } from "react-native-paper";
 
-export function PaymentCard({ payment }: any) {
+type PaymentCardProps = {
+    payment: any;
+    onPress: () => void;
+};
+
+export function PaymentCard({ payment, onPress }: PaymentCardProps) {
     const paid = payment.status === "PAID";
     const pending = payment.status === "PENDING";
     const failed = payment.status === "FAILED";
     const cancelled = payment.status === "CANCELLED";
 
     return (
-        <Card style={styles.card}>
-            <LinearGradient
-                colors={
-                    paid
-                        ? ["#0f766e", "#14b8a6"]
-                        : pending ? ["#fbbf24", "#f59e0b"] : failed ? ["#b6b6b6", "#a3a3a3"] : cancelled ? ["#f87171", "#ef4444"] : ["#312e81", "#6366f1"]
-                }
-                start={{ x: 0, y: 0 }}
-                end={{ x: 1, y: 1 }}
-                style={styles.gradient}
-            >
-                <View style={styles.header}>
-                    <View>
-                        <Text style={styles.label}>
-                            {payment.description}
-                        </Text>
+        <Pressable onPress={onPress}>
+            <Card style={styles.card}>
+                <LinearGradient
+                    colors={
+                        paid
+                            ? ["#0f766e", "#14b8a6"]
+                            : pending ? ["#fbbf24", "#f59e0b"] : failed ? ["#b6b6b6", "#a3a3a3"] : cancelled ? ["#f87171", "#ef4444"] : ["#312e81", "#6366f1"]
+                    }
+                    start={{ x: 0, y: 0 }}
+                    end={{ x: 1, y: 1 }}
+                    style={styles.gradient}
+                >
+                    <View style={styles.header}>
+                        <View>
+                            <Text style={styles.label}>
+                                {payment.description}
+                            </Text>
 
-                        <Text style={styles.date}>
-                            Vencimento {payment.dueDate}
-                        </Text>
+                            <Text style={styles.date}>
+                                Vencimento {payment.dueDate}
+                            </Text>
+                        </View>
+
+                        <View style={styles.iconContainer}>
+                            <Feather
+                                name={paid ? "check-circle" : "clock"}
+                                size={28}
+                                color="#fff"
+                            />
+                        </View>
                     </View>
 
-                    <View style={styles.iconContainer}>
+                    <Text style={styles.amount}>
+                        $ {Number(payment.amount).toFixed(2)}
+                    </Text>
+
+                    <View style={styles.footer}>
+                        <Chip
+                            textStyle={{
+                                color: "#fff",
+                                fontWeight: "700",
+                            }}
+                            style={{
+                                backgroundColor: "rgba(255,255,255,0.15)",
+                            }}
+                        >
+                            {payment.status}
+                        </Chip>
+
                         <Feather
-                            name={paid ? "check-circle" : "clock"}
-                            size={28}
+                            name="arrow-right"
+                            size={20}
                             color="#fff"
                         />
                     </View>
-                </View>
-
-                <Text style={styles.amount}>
-                    $ {Number(payment.amount).toFixed(2)}
-                </Text>
-
-                <View style={styles.footer}>
-                    <Chip
-                        textStyle={{
-                            color: "#fff",
-                            fontWeight: "700",
-                        }}
-                        style={{
-                            backgroundColor: "rgba(255,255,255,0.15)",
-                        }}
-                    >
-                        {payment.status}
-                    </Chip>
-
-                    <Feather
-                        name="arrow-right"
-                        size={20}
-                        color="#fff"
-                    />
-                </View>
-            </LinearGradient>
-        </Card>
+                </LinearGradient>
+            </Card>
+        </Pressable>
     );
 }
 
@@ -80,6 +89,10 @@ export default function PaymentsScreen() {
     const [status, setStatus] = useState<String | null>(null);
     const statusRef = useRef<string | null>(null);
     const [visible, setVisible] = useState<boolean>(false);
+    const [selectedPaymentId, setSelectedPaymentId] = useState<number | null>(null);
+    const [modalVisible, setModalVisible] = useState(false);
+    const [createVisible, setCreateVisible] = useState(false);
+    const [loadingMore, setLoadingMore] = useState(false);
 
     const flatListRef = useRef(null);
 
@@ -93,6 +106,8 @@ export default function PaymentsScreen() {
         page: number = 0,
         status: string | null = null
     ) => {
+        if (loadingMore) return;
+        setLoadingMore(true);
         const sort = "dueDate,desc";
         let endpoint = `payment?page=${page}&size=10&sort=${sort}`;
         if (status) {
@@ -103,10 +118,20 @@ export default function PaymentsScreen() {
             if (page === 0) {
                 setPayments(response.content);
             } else {
-                setPayments(old => [...old, ...response.content]);
+                setPayments(old => {
+                    const map = new Map();
+
+                    [...old, ...response.content].forEach(payment => {
+                        map.set(payment.id, payment);
+                    });
+
+                    return [...map.values()];
+                });
             }
         } catch (error) {
             console.log(error);
+        } finally {
+            setLoadingMore(false);
         }
     };
 
@@ -116,7 +141,7 @@ export default function PaymentsScreen() {
     }, [page, status]);
 
     return (
-        <View>
+        <View style={{ flex: 1 }}>
             <AppHeader title="Payments" />
             <View style={styles.filterContainer}>
                 <TouchableOpacity
@@ -167,9 +192,15 @@ export default function PaymentsScreen() {
             <FlatList
                 ref={flatListRef}
                 data={payments}
+                style={{ flex: 1 }}
+                contentContainerStyle={{ flexGrow: 1, paddingBottom: 200 }}
                 keyExtractor={(item: any) => item.id}
+                ListEmptyComponent={() => <Text style={styles.emptyList}>No payments found</Text>}
                 renderItem={({ item }) => (
-                    <PaymentCard payment={item} />
+                    <PaymentCard payment={item} onPress={() => {
+                        setSelectedPaymentId(item.id);
+                        setModalVisible(true);
+                    }} />
                 )}
                 onEndReached={() => {
                     setPage(prev => prev + 1);
@@ -181,6 +212,29 @@ export default function PaymentsScreen() {
                     animated: true,
                 });
             }} />
+            <FAB
+                icon="plus"
+                style={styles.addFab}
+                onPress={() => setCreateVisible(true)}
+            />
+            <PaymentModal
+                visible={modalVisible}
+                paymentId={selectedPaymentId}
+                onClose={() => {
+                    setModalVisible(false);
+                    setSelectedPaymentId(null);
+                }}
+                onUpdate={() => {
+                    handleGetPayments(0, status);
+                }}
+            />
+            <CreatePaymentModal
+                visible={createVisible}
+                onClose={() => setCreateVisible(false)}
+                onCreated={() => {
+                    handleGetPayments(0, status);
+                }}
+            />
         </View>
     );
 }
@@ -191,6 +245,12 @@ const styles = StyleSheet.create({
         alignItems: "flex-end",
         marginBottom: 8,
         zIndex: 10,
+    },
+
+    emptyList: {
+        marginTop: 16,
+        textAlign: "center",
+        color: "#475569",
     },
 
     filterButton: {
@@ -233,6 +293,11 @@ const styles = StyleSheet.create({
         fontWeight: "600",
     },
     fab: {
+        position: "absolute",
+        right: 16,
+        bottom: 240,
+    },
+    addFab: {
         position: "absolute",
         right: 16,
         bottom: 160,

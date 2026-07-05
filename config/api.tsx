@@ -98,6 +98,10 @@ export const apiClient = async (
       throw new Error(errorText);
     }
 
+    if (response.status === 204) {
+      return null;
+    }
+
     return await response.json();
   } catch (error) {
     console.error("API request failed", error);

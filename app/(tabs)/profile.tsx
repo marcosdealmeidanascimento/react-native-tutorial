@@ -149,7 +149,17 @@ export default function ProfileScreen() {
                     onPress={() => setModalVisible(true)}>
                     <View style={styleSheet.avatarWrapper}>
                         {profilePicture && <Image source={{ uri: profilePicture.url }} style={styleSheet.avatarImage} />}
-                        {!profilePicture && <Avatar.Text size={100} label={user?.name.split(" ")[0][0] + user?.name.split(" ")[1][0]} />}
+                        {!profilePicture && <Avatar.Text
+                            size={100}
+                            label={
+                                user?.name
+                                    ?.split(" ")
+                                    .map(name => name[0])
+                                    .slice(0, 2)
+                                    .join("")
+                                    .toUpperCase() || "?"
+                            }
+                        />}
                     </View>
                 </Pressable>
                 <Text style={{ marginRight: 16, fontWeight: "bold", fontSize: 24 }}>{user?.name}</Text>
