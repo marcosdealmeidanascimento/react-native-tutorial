@@ -1,174 +1,243 @@
 import Logo from "@/components/logo";
-import { apiClient } from "@/config/api";
+import { Field, FormError } from "@/components/ui/common";
+import { ApiError } from "@/config/api";
 import { useAuth } from "@/config/auth";
+import { colors, radius, shadow, spacing } from "@/src/theme";
+import { LinearGradient } from "expo-linear-gradient";
+import { StatusBar } from "expo-status-bar";
 import { useState } from "react";
-import { KeyboardAvoidingView, Platform, StyleSheet, View } from "react-native";
-import { Button, Text, TextInput, useTheme } from "react-native-paper";
+import { KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import { Button } from "react-native-paper";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
-export default function authScreen() {
-    const [isSignUp, setIsSignUp] = useState<boolean>(false);
-    const [name, setName] = useState<string>("");
-    const [email, setEmail] = useState<string>("");
-    const [password, setPassword] = useState<string>("");
-    const [error, setError] = useState<string>("");
-    const theme = useTheme();
+export default function AuthScreen() {
+  const insets = useSafeAreaInsets();
+  const { login, register } = useAuth();
+  const [isSignUp, setIsSignUp] = useState(false);
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-    const { login } = useAuth();
+  const switchMode = (signUp: boolean) => {
+    setIsSignUp(signUp);
+    setError(null);
+  };
 
-    const handleSwitchMode = () => {
-        setIsSignUp((prev: boolean) => !prev);
+  const handleAuth = async () => {
+    if ((isSignUp && !name.trim()) || !email.trim() || !password) {
+      setError("Preencha todos os campos.");
+      return;
+    }
+    if (password.length < 6) {
+      setError("A senha deve ter pelo menos 6 caracteres.");
+      return;
+    }
 
-        setError("");
-        setName("");
-        setEmail("");
-        setPassword("");
-    };
+    setLoading(true);
+    setError(null);
+    try {
+      if (isSignUp) {
+        await register(name.trim(), email.trim(), password);
+      }
+      // After signing up, log straight in so the user lands on the dashboard.
+      await login(email.trim(), password);
+    } catch (e: any) {
+      const status = e instanceof ApiError ? e.status : 0;
+      if (status === 429) {
+        // Too many failed logins: the API says how long to wait.
+        setError(e.message);
+      } else if (!isSignUp) {
+        setError("E-mail ou senha inválidos.");
+      } else {
+        // 400/409 carry a user-facing reason from the API (e.g. "Este e-mail já está em uso.").
+        setError(status === 400 || status === 409 ? e.message : "Não foi possível criar a conta. Tente novamente.");
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
 
-    const handleAuth = async () => {
-        if (!email || !password) {
-            setError("Please fill in all fields.");
-            return;
-        }
+  return (
+    <View style={styles.container}>
+      <StatusBar style="light" />
+      <LinearGradient colors={colors.heroGradient} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={styles.backdrop}>
+        <View style={[styles.glow, { top: -80, right: -60 }]} />
+        <View style={[styles.glow, { top: 140, left: -100, width: 200, height: 200 }]} />
+      </LinearGradient>
 
-        if (password.length < 6) {
-            setError("Password must be at least 6 characters.");
-            return;
-        }
+      <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : undefined} style={{ flex: 1 }}>
+        <ScrollView
+          contentContainerStyle={[styles.content, { paddingTop: insets.top + spacing.xl, paddingBottom: insets.bottom + spacing.lg }]}
+          keyboardShouldPersistTaps="handled"
+        >
+          <View style={styles.brand}>
+            <Logo width={84} height={84} />
+            <Text style={styles.title}>Finance Dashboard</Text>
+            <Text style={styles.subtitle}>Controle suas finanças com clareza</Text>
+          </View>
 
-        try {
-            if (isSignUp) {
-                await apiClient("users", "POST", { name, email, password });
-                setIsSignUp(false);
-                return;
-            } else {
-                await login(email, password);
-
-            }
-        } catch (error: any) {
-            setError("Login ou senha inválidos.");
-        }
-    };
-
-    return (
-        <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : "height"} style={styleSheet.container}>
-            <View style={styleSheet.content}>
-                <View style={styleSheet.logoContainer}>
-                    <Logo width={120} height={120} />
-                    <Text variant="headlineMedium" style={styleSheet.title}>
-                        Finance Dashboard
-                    </Text>
-                    <Text
-                        variant="bodyMedium"
-                        style={styleSheet.subtitle}
-                    >
-                        Track your finances with confidence
-                    </Text>
-                </View>
-                {/* <Text style={styleSheet.title} variant="headlineLarge">{isSignUp ? "Create an account" : "Welcome back"}</Text> */}
-                <View style={styleSheet.formCard}>
-                    {isSignUp && (
-                        <TextInput
-                            label="Name"
-                            autoCapitalize="words"
-                            placeholder="Your name"
-                            mode="outlined"
-                            style={styleSheet.input}
-                            value={name}
-                            onChangeText={setName}
-                        />
-                    )}
-
-                    <TextInput
-                        label="Email"
-                        autoCapitalize="none"
-                        keyboardType="email-address"
-                        placeholder="example@gmail.com"
-                        mode="outlined"
-                        style={styleSheet.input}
-                        onChangeText={setEmail}
-                    />
-
-                    <TextInput
-                        label="Password"
-                        secureTextEntry
-                        mode="outlined"
-                        placeholder="Password"
-                        autoCapitalize="none"
-                        style={styleSheet.input}
-                        onChangeText={setPassword}
-                    />
-                    {error && <View style={styleSheet.errorContainer}>
-                        <Text style={styleSheet.errorText}>
-                            {error}
-                        </Text>
-                    </View>}
-                    <Button
-                        mode="contained"
-                        style={styleSheet.button}
-                        contentStyle={{
-                            height: 56,
-                        }}
-                        onPress={handleAuth}
-                    >
-                        {isSignUp ? "Sign Up" : "Login"}
-                    </Button>
-                    <Button style={styleSheet.button} mode="text" onPress={handleSwitchMode}>{isSignUp ? "Already have an account? Login" : "Don't have an account? Sign Up"}</Button>
-                </View>
-
+          <View style={styles.card}>
+            <View style={styles.segmented}>
+              {[
+                { label: "Entrar", value: false },
+                { label: "Criar conta", value: true },
+              ].map((option) => (
+                <Pressable
+                  key={option.label}
+                  onPress={() => switchMode(option.value)}
+                  style={[styles.segment, isSignUp === option.value && styles.segmentActive]}
+                >
+                  <Text style={[styles.segmentText, isSignUp === option.value && styles.segmentTextActive]}>
+                    {option.label}
+                  </Text>
+                </Pressable>
+              ))}
             </View>
-        </KeyboardAvoidingView>
-    );
+
+            <Text style={styles.cardTitle}>{isSignUp ? "Crie sua conta" : "Bem-vindo de volta"}</Text>
+            <Text style={styles.cardSubtitle}>
+              {isSignUp ? "Leva menos de um minuto." : "Entre para ver o resumo das suas finanças."}
+            </Text>
+
+            {isSignUp && (
+              <Field
+                label="Nome"
+                autoCapitalize="words"
+                value={name}
+                onChangeText={setName}
+                left={<Field.Icon icon="account-outline" />}
+              />
+            )}
+            <Field
+              label="E-mail"
+              autoCapitalize="none"
+              keyboardType="email-address"
+              autoComplete="email"
+              value={email}
+              onChangeText={setEmail}
+              left={<Field.Icon icon="email-outline" />}
+            />
+            <Field
+              label="Senha"
+              secureTextEntry={!showPassword}
+              autoCapitalize="none"
+              value={password}
+              onChangeText={setPassword}
+              onSubmitEditing={handleAuth}
+              left={<Field.Icon icon="lock-outline" />}
+              right={<Field.Icon icon={showPassword ? "eye-off-outline" : "eye-outline"} onPress={() => setShowPassword((v) => !v)} />}
+            />
+
+            <FormError message={error} />
+
+            <Button
+              mode="contained"
+              loading={loading}
+              disabled={loading}
+              onPress={handleAuth}
+              style={styles.button}
+              contentStyle={{ height: 54 }}
+              labelStyle={{ fontSize: 16, fontWeight: "700" }}
+            >
+              {isSignUp ? "Criar conta" : "Entrar"}
+            </Button>
+          </View>
+        </ScrollView>
+      </KeyboardAvoidingView>
+    </View>
+  );
 }
 
-const styleSheet = StyleSheet.create({
-    container: {
-        flex: 1,
-        backgroundColor: "#F8FAFC"
-    },
-    content: {
-        flex: 1,
-        padding: 16,
-        justifyContent: "center"
-    },
-    title: {
-        textAlign: "center"
-    },
-    input: {
-        marginTop: 20,
-        backgroundColor: "#fff",
-    },
-    button: {
-        marginTop: 16
-    },
-    logoContainer: {
-        alignItems: "center",
-        marginTop: 16
-    },
-    subtitle: {
-        marginTop: 8,
-        opacity: 0.6,
-        textAlign: "center"
-    },
-    formCard: {
-        backgroundColor: "#fff",
-        padding: 24,
-        marginTop: 32,
-        elevation: 8,
-        borderRadius: 16,
-    },
-    form: {
-        marginTop: 32,
-    },
-    errorContainer: {
-        marginTop: 16,
-    },
-    errorText: {
-        color: "red",
-        textAlign: "center",
-    },
-    signUpContainer: {
-        flexDirection: "row",
-        justifyContent: "center",
-        marginTop: 16
-    }
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: colors.background,
+  },
+  backdrop: {
+    position: "absolute",
+    top: 0,
+    left: 0,
+    right: 0,
+    height: "52%",
+    borderBottomLeftRadius: 40,
+    borderBottomRightRadius: 40,
+    overflow: "hidden",
+  },
+  glow: {
+    position: "absolute",
+    width: 260,
+    height: 260,
+    borderRadius: 130,
+    backgroundColor: "rgba(255,255,255,0.07)",
+  },
+  content: {
+    flexGrow: 1,
+    paddingHorizontal: spacing.lg - 4,
+    justifyContent: "center",
+  },
+  brand: {
+    alignItems: "center",
+    marginBottom: spacing.lg,
+  },
+  title: {
+    marginTop: spacing.sm + 4,
+    color: "#fff",
+    fontSize: 26,
+    fontWeight: "800",
+    letterSpacing: -0.5,
+  },
+  subtitle: {
+    marginTop: 4,
+    color: "rgba(255,255,255,0.75)",
+    fontSize: 15,
+  },
+  card: {
+    backgroundColor: colors.surface,
+    borderRadius: radius.xl,
+    padding: spacing.lg - 4,
+    ...shadow.floating,
+  },
+  segmented: {
+    flexDirection: "row",
+    backgroundColor: colors.neutralSoft,
+    borderRadius: radius.pill,
+    padding: 4,
+    marginBottom: spacing.lg - 4,
+  },
+  segment: {
+    flex: 1,
+    paddingVertical: 10,
+    borderRadius: radius.pill,
+    alignItems: "center",
+  },
+  segmentActive: {
+    backgroundColor: colors.surface,
+    ...shadow.card,
+  },
+  segmentText: {
+    fontSize: 14,
+    fontWeight: "700",
+    color: colors.muted,
+  },
+  segmentTextActive: {
+    color: colors.text,
+  },
+  cardTitle: {
+    fontSize: 22,
+    fontWeight: "800",
+    color: colors.text,
+  },
+  cardSubtitle: {
+    marginTop: 4,
+    marginBottom: spacing.md,
+    fontSize: 14,
+    color: colors.textSecondary,
+  },
+  button: {
+    marginTop: spacing.xs,
+    borderRadius: radius.md,
+  },
 });

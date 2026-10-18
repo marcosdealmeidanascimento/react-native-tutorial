@@ -1,19 +1,21 @@
+import { ToastProvider } from "@/components/ui/Toast";
 import { AuthProvider, useAuth } from "@/config/auth";
+import { colors, paperTheme } from "@/src/theme";
+import { LinearGradient } from "expo-linear-gradient";
 import { Redirect, Stack, useSegments } from "expo-router";
 import React from "react";
-import { ActivityIndicator, StyleSheet, Text, View } from "react-native";
+import { ActivityIndicator, StyleSheet, Text } from "react-native";
+import { PaperProvider } from "react-native-paper";
 import Logo from "../components/logo";
 
 function AppLoading() {
   return (
-    <View style={styles.container}>
-      <Logo width={120} height={120} />
-      <Text style={styles.subtitle}>
-        Finance dashboard
-      </Text>
-      <ActivityIndicator size="small" color="#6366F1" style={styles.loader} />
-    </View>
-  )
+    <LinearGradient colors={colors.heroGradient} style={styles.container}>
+      <Logo width={110} height={110} />
+      <Text style={styles.title}>Finance Dashboard</Text>
+      <ActivityIndicator size="small" color="#fff" style={styles.loader} />
+    </LinearGradient>
+  );
 }
 
 function RouteGuard({ children }: { children: React.ReactNode }) {
@@ -21,9 +23,7 @@ function RouteGuard({ children }: { children: React.ReactNode }) {
   const segments = useSegments();
 
   if (loading) {
-    return (
-      <AppLoading />
-    );
+    return <AppLoading />;
   }
 
   const isAuthRoute = segments[0] === "auth";
@@ -41,39 +41,34 @@ function RouteGuard({ children }: { children: React.ReactNode }) {
 
 export default function RootLayout() {
   return (
-    <AuthProvider>
-      <RouteGuard>
-        <Stack screenOptions={{
-          headerShown: false
-        }}>
-          <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-        </Stack>
-      </RouteGuard>
-    </AuthProvider>
+    <PaperProvider theme={paperTheme}>
+      <AuthProvider>
+        <ToastProvider>
+          <RouteGuard>
+            <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: colors.background } }}>
+              <Stack.Screen name="(tabs)" />
+              <Stack.Screen name="auth" options={{ animation: "fade" }} />
+            </Stack>
+          </RouteGuard>
+        </ToastProvider>
+      </AuthProvider>
+    </PaperProvider>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-
     justifyContent: "center",
     alignItems: "center",
-
-    backgroundColor: "#F8FAFC",
     padding: 24,
   },
-
   title: {
-    marginTop: 24,
-    fontWeight: "700",
+    marginTop: 16,
+    color: "#fff",
+    fontSize: 22,
+    fontWeight: "800",
   },
-
-  subtitle: {
-    marginTop: 8,
-    opacity: 0.6,
-  },
-
   loader: {
     marginTop: 24,
   },

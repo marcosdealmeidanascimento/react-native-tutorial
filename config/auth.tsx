@@ -1,129 +1,101 @@
-import { createContext, useContext, useEffect, useState } from "react";
-import { clearStoredToken, getStoredToken, storeAccessToken, storeRefreshToken } from "./api";
-
+import { authApi, usersApi } from "@/services/finance";
+import type { User } from "@/types/api";
+import { createContext, useCallback, useContext, useEffect, useState } from "react";
+import { clearStoredToken, getStoredToken, setSessionExpiredHandler, storeTokens } from "./api";
 
 interface AuthContextType {
-  user: any | null;
-  refreshUser: () => Promise<void>;
-  profilePicture: any | null;
+  user: User | null;
+  /** Presigned URL of the profile picture, or null when the user has none. */
+  profilePicture: string | null;
   isAuth: boolean;
   loading: boolean;
+  refreshUser: () => Promise<void>;
   login: (email: string, password: string) => Promise<void>;
   register: (name: string, email: string, password: string) => Promise<void>;
   logout: () => Promise<void>;
+  deleteAccount: () => Promise<void>;
 }
 
 export const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-const API_URL = process.env.EXPO_PUBLIC_BACKEND_URL;
-
 export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
-  const [user, setUser] = useState<any | null>(null);
-  const [profilePicture, setProfilePicture] = useState<any | null>(null);
+  const [user, setUser] = useState<User | null>(null);
+  const [profilePicture, setProfilePicture] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
 
+  const resetSession = useCallback(() => {
+    setUser(null);
+    setProfilePicture(null);
+  }, []);
+
+  const refreshUser = useCallback(async () => {
+    const [userData, picture] = await Promise.all([usersApi.me(), usersApi.getProfilePicture()]);
+    setUser(userData);
+    setProfilePicture(picture);
+  }, []);
+
   useEffect(() => {
+    setSessionExpiredHandler(resetSession);
+
     async function loadStorageData() {
       try {
-        const token = await getStoredToken();
-        if (token) {
-          const userData = await fetchUserData(token);
-          setUser(userData);
-          const profilePicture = await getProfilePicture(token);
-          setProfilePicture(profilePicture);
+        if (await getStoredToken()) {
+          await refreshUser();
         }
-      } catch (e) {
+      } catch {
         await clearStoredToken();
+        resetSession();
       } finally {
         setLoading(false);
       }
     }
     loadStorageData();
-  }, []);
 
-  const refreshUser = async () => {
-    const token = await getStoredToken();
-
-    if (!token) {
-      return;
-    }
-
-    const userData = await fetchUserData(token);
-    setUser(userData);
-
-    const picture = await getProfilePicture(token);
-    setProfilePicture(picture);
-  };
-
-  const fetchUserData = async (token: string) => {
-    const response = await fetch(`${API_URL}/users/me`, {
-      headers: { Authorization: `Bearer ${token}` },
-    });
-    if (!response.ok) throw new Error();
-    return await response.json();
-  };
-
-  const getProfilePicture = async (token: string) => {
-    const response = await fetch(`${API_URL}/users/profile-picture`, {
-      headers: { Authorization: `Bearer ${token}` },
-    });
-    if (!response.ok) return null;
-    return await response.json();
-  }
+    return () => setSessionExpiredHandler(null);
+  }, [refreshUser, resetSession]);
 
   const login = async (email: string, password: string) => {
-    try {
-      const response = await fetch(`${API_URL}/auth/login`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, password }),
-      });
-
-      if (!response.ok) throw new Error("Login failed");
-
-      const data = await response.json();
-
-      await storeAccessToken(data.accessToken);
-      await storeRefreshToken(data.refreshToken);
-
-      const userData = await fetchUserData(data.accessToken);
-      setUser(userData);
-
-      const profilePicture = await getProfilePicture(data.accessToken);
-      setProfilePicture(profilePicture.url);
-
-    } catch (error) {
-      throw new Error("Login failed");
-    }
+    const tokens = await authApi.login(email, password);
+    await storeTokens(tokens);
+    await refreshUser();
   };
 
   const register = async (name: string, email: string, password: string) => {
-    try {
-      const response = await fetch(`${API_URL}/users`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name, email, password }),
-      });
-
-      if (!response.ok) throw new Error("Registration failed");
-    } catch (error) {
-      throw new Error("Registration failed");
-    }
+    await authApi.register(name, email, password);
   };
 
   const logout = async () => {
     try {
-      await clearStoredToken();
-      setUser(null);
+      // Revokes the refresh token on the server; the local session is cleared regardless.
+      await authApi.logout();
     } catch (error) {
-      throw new Error("Logout failed");
+      console.log("Failed to revoke session", error);
     }
+    await clearStoredToken();
+    resetSession();
   };
 
-  const isAuth = !!user;
+  const deleteAccount = async () => {
+    if (!user) return;
+    await usersApi.remove(user.id);
+    await clearStoredToken();
+    resetSession();
+  };
 
   return (
-    <AuthContext.Provider value={{ user, isAuth, loading, login, register, logout, profilePicture, refreshUser }}>
+    <AuthContext.Provider
+      value={{
+        user,
+        profilePicture,
+        isAuth: !!user,
+        loading,
+        refreshUser,
+        login,
+        register,
+        logout,
+        deleteAccount,
+      }}
+    >
       {children}
     </AuthContext.Provider>
   );

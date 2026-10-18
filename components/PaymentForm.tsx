@@ -1,130 +1,195 @@
-import { StyleSheet, View } from "react-native";
-import { Switch, Text, TextInput } from "react-native-paper";
+import { Field } from "@/components/ui/common";
+import { colors, radius, spacing } from "@/src/theme";
+import type { Payment, PaymentInput } from "@/types/api";
+import {
+  displayDateToISO,
+  formatAmountInput,
+  formatDate,
+  maskDateInput,
+  parseAmount,
+  toISODate,
+} from "@/utils/format";
+import { Feather } from "@expo/vector-icons";
+import type { ComponentProps } from "react";
+import { Pressable, StyleSheet, Text, View } from "react-native";
+import { Switch } from "react-native-paper";
 
-interface Props {
-    payment: any;
-    setPayment: React.Dispatch<React.SetStateAction<any>>;
+type FeatherIcon = ComponentProps<typeof Feather>["name"];
+
+export const PAYMENT_METHODS: { value: string; icon: FeatherIcon }[] = [
+  { value: "PIX", icon: "zap" },
+  { value: "Cartão de crédito", icon: "credit-card" },
+  { value: "Débito", icon: "smartphone" },
+  { value: "Boleto", icon: "file-text" },
+  { value: "Transferência", icon: "repeat" },
+  { value: "Dinheiro", icon: "dollar-sign" },
+];
+
+export function paymentMethodIcon(method?: string | null): FeatherIcon {
+  return PAYMENT_METHODS.find((m) => m.value.toLowerCase() === method?.toLowerCase())?.icon ?? "credit-card";
 }
 
-export default function PaymentForm({
-    payment,
-    setPayment,
-}: Props) {
-    const updateField = (field: string, value: any) => {
-        setPayment((old: any) => ({
-            ...old,
-            [field]: value,
-        }));
-    };
+export type PaymentDraft = {
+  description: string;
+  amount: string;
+  dueDate: string;
+  recurring: boolean;
+  method: string;
+};
 
-    return (
-        <View style={styles.container}>
+export const emptyPaymentDraft = (): PaymentDraft => ({
+  description: "",
+  amount: "",
+  dueDate: formatDate(toISODate(new Date())),
+  recurring: false,
+  method: "PIX",
+});
 
-            <TextInput
-                mode="outlined"
-                label="Description"
-                value={payment.description}
-                onChangeText={(text) =>
-                    updateField("description", text)
-                }
-                style={styles.input}
-            />
+export const paymentToDraft = (payment: Payment): PaymentDraft => ({
+  description: payment.description ?? "",
+  amount: formatAmountInput(Number(payment.amount)),
+  dueDate: formatDate(payment.dueDate),
+  recurring: !!payment.recurring,
+  method: payment.method ?? "PIX",
+});
 
-            <TextInput
-                mode="outlined"
-                label="Amount"
-                keyboardType="decimal-pad"
-                value={String(payment.amount)}
-                onChangeText={(text) =>
-                    updateField(
-                        "amount",
-                        text.replace(",", ".")
-                    )
-                }
-                style={styles.input}
-            />
+export function draftToPaymentInput(draft: PaymentDraft): { input?: PaymentInput; error?: string } {
+  const amount = parseAmount(draft.amount);
+  const dueDate = displayDateToISO(draft.dueDate);
 
-            <TextInput
-                mode="outlined"
-                label="Due date"
-                placeholder="YYYY-MM-DD"
-                value={payment.dueDate}
-                onChangeText={(text) =>
-                    updateField("dueDate", text)
-                }
-                style={styles.input}
-            />
+  if (!draft.description.trim()) return { error: "Informe uma descrição." };
+  if (!amount || amount <= 0) return { error: "Informe um valor maior que zero." };
+  if (!dueDate) return { error: "Data de vencimento inválida. Use DD/MM/AAAA." };
 
-            <TextInput
-                mode="outlined"
-                label="Payment method"
-                value={payment.method}
-                onChangeText={(text) =>
-                    updateField("method", text)
-                }
-                style={styles.input}
-            />
+  return {
+    input: {
+      description: draft.description.trim(),
+      amount,
+      dueDate,
+      recurring: draft.recurring,
+      method: draft.method,
+    },
+  };
+}
 
-            <View style={styles.switchRow}>
-                <Text
-                    variant="titleMedium"
-                >
-                    Recurring
-                </Text>
+type Props = {
+  draft: PaymentDraft;
+  onChange: (draft: PaymentDraft) => void;
+};
 
-                <Switch
-                    value={payment.recurring}
-                    onValueChange={(value) =>
-                        updateField("recurring", value)
-                    }
-                />
-            </View>
+export default function PaymentForm({ draft, onChange }: Props) {
+  const update = <K extends keyof PaymentDraft>(field: K, value: PaymentDraft[K]) =>
+    onChange({ ...draft, [field]: value });
 
+  return (
+    <View>
+      <Field
+        label="Descrição"
+        placeholder="Ex.: Aluguel"
+        value={draft.description}
+        onChangeText={(text) => update("description", text)}
+        left={<Field.Icon icon="text" />}
+      />
+      <View style={styles.row}>
+        <Field
+          label="Valor (R$)"
+          placeholder="0,00"
+          keyboardType="decimal-pad"
+          value={draft.amount}
+          onChangeText={(text) => update("amount", text.replace(/[^\d.,]/g, ""))}
+          style={styles.half}
+        />
+        <Field
+          label="Vencimento"
+          placeholder="DD/MM/AAAA"
+          keyboardType="number-pad"
+          value={draft.dueDate}
+          onChangeText={(text) => update("dueDate", maskDateInput(text))}
+          style={styles.half}
+        />
+      </View>
+
+      <Text style={styles.label}>Forma de pagamento</Text>
+      <View style={styles.methods}>
+        {PAYMENT_METHODS.map((method) => {
+          const selected = method.value === draft.method;
+          return (
+            <Pressable
+              key={method.value}
+              onPress={() => update("method", method.value)}
+              style={[styles.method, selected && styles.methodSelected]}
+            >
+              <Feather name={method.icon} size={14} color={selected ? "#fff" : colors.primary} />
+              <Text style={[styles.methodText, selected && { color: "#fff" }]}>{method.value}</Text>
+            </Pressable>
+          );
+        })}
+      </View>
+
+      <View style={styles.switchRow}>
+        <View style={{ flex: 1 }}>
+          <Text style={styles.switchTitle}>Pagamento recorrente</Text>
+          <Text style={styles.switchSubtitle}>Repete todo mês</Text>
         </View>
-    );
+        <Switch value={draft.recurring} onValueChange={(value) => update("recurring", value)} />
+      </View>
+    </View>
+  );
 }
 
 const styles = StyleSheet.create({
-    container: {
-        marginTop: 16,
-    },
-
-    input: {
-        marginBottom: 16,
-        backgroundColor: "#fff",
-    },
-
-    sectionTitle: {
-        marginBottom: 12,
-        fontWeight: "700",
-        color: "#475569",
-    },
-
-    methodsContainer: {
-        flexDirection: "row",
-        flexWrap: "wrap",
-        gap: 10,
-        marginBottom: 24,
-    },
-
-    method: {
-        paddingHorizontal: 16,
-        paddingVertical: 10,
-        borderRadius: 16,
-        backgroundColor: "#EEF2FF",
-        color: "#4F46E5",
-        fontWeight: "700",
-        overflow: "hidden",
-    },
-
-    selectedMethod: {
-        backgroundColor: "#4F46E5",
-        color: "#fff",
-    },
-
-    switchRow: {
-        flexDirection: "row",
-        justifyContent: "space-between",
-        alignItems: "center",
-    },
+  row: {
+    flexDirection: "row",
+    gap: spacing.sm + 4,
+  },
+  half: {
+    flex: 1,
+  },
+  label: {
+    fontSize: 13,
+    fontWeight: "700",
+    color: colors.textSecondary,
+    marginTop: spacing.xs,
+    marginBottom: spacing.sm + 2,
+  },
+  methods: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: spacing.sm,
+    marginBottom: spacing.md,
+  },
+  method: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+    paddingHorizontal: 14,
+    paddingVertical: 9,
+    borderRadius: radius.pill,
+    backgroundColor: colors.primarySoft,
+  },
+  methodSelected: {
+    backgroundColor: colors.primary,
+  },
+  methodText: {
+    fontSize: 13,
+    fontWeight: "700",
+    color: colors.primary,
+  },
+  switchRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: colors.neutralSoft,
+    borderRadius: radius.md,
+    padding: spacing.md,
+  },
+  switchTitle: {
+    fontSize: 15,
+    fontWeight: "700",
+    color: colors.text,
+  },
+  switchSubtitle: {
+    marginTop: 2,
+    fontSize: 13,
+    color: colors.muted,
+  },
 });
