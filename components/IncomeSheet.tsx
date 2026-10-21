@@ -7,7 +7,7 @@ import IncomeForm, {
 import BottomSheet, { SheetCloseButton } from "@/components/ui/BottomSheet";
 import { confirm, DetailRow, FormError } from "@/components/ui/common";
 import { incomesApi } from "@/services/finance";
-import { colors, radius, spacing } from "@/src/theme";
+import { colors, radius, spacing, fonts } from "@/src/theme";
 import type { Income } from "@/types/api";
 import { formatCurrency, formatDate } from "@/utils/format";
 import { Feather } from "@expo/vector-icons";
@@ -78,7 +78,7 @@ export default function IncomeSheet({ visible, incomeId, onClose, onChanged }: P
 
   const handleDelete = async () => {
     if (!income) return;
-    const ok = await confirm("Excluir receita", `Deseja excluir "${income.description}"?`, "Excluir");
+    const ok = await confirm("Excluir receita", `Deseja excluir "${income.description}"?`, "Excluir", true, "trash-2");
     if (ok) run(() => incomesApi.remove(income.id), "Receita excluída");
   };
 
@@ -106,7 +106,7 @@ export default function IncomeSheet({ visible, incomeId, onClose, onChanged }: P
       onClose={onClose}
       header={
         income ? (
-          <LinearGradient colors={["#0B8A61", "#12B981"]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={styles.hero}>
+          <LinearGradient colors={["#004D2C", "#007A43"]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={styles.hero}>
             <View style={styles.heroTop}>
               <View style={styles.heroIcon}>
                 <Feather name="arrow-down-left" size={18} color="#fff" />
@@ -184,13 +184,13 @@ const styles = StyleSheet.create({
     marginTop: spacing.lg,
     color: "rgba(255,255,255,0.8)",
     fontSize: 15,
-    fontWeight: "600",
+    fontFamily: fonts.semibold,
   },
   heroAmount: {
     marginTop: 4,
     color: "#fff",
     fontSize: 38,
-    fontWeight: "800",
+    fontFamily: fonts.bold,
     letterSpacing: -1,
   },
   loadingHeader: {

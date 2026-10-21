@@ -1,12 +1,13 @@
 import Logo from "@/components/logo";
 import { Field, FormError } from "@/components/ui/common";
+import KeyboardAwareScrollView from "@/components/ui/KeyboardAwareScrollView";
 import { ApiError } from "@/config/api";
 import { useAuth } from "@/config/auth";
-import { colors, radius, shadow, spacing } from "@/src/theme";
+import { colors, radius, shadow, spacing, fonts } from "@/src/theme";
 import { LinearGradient } from "expo-linear-gradient";
 import { StatusBar } from "expo-status-bar";
 import { useState } from "react";
-import { KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import { Pressable, StyleSheet, Text, View } from "react-native";
 import { Button } from "react-native-paper";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
@@ -68,11 +69,10 @@ export default function AuthScreen() {
         <View style={[styles.glow, { top: 140, left: -100, width: 200, height: 200 }]} />
       </LinearGradient>
 
-      <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : undefined} style={{ flex: 1 }}>
-        <ScrollView
-          contentContainerStyle={[styles.content, { paddingTop: insets.top + spacing.xl, paddingBottom: insets.bottom + spacing.lg }]}
-          keyboardShouldPersistTaps="handled"
-        >
+      <KeyboardAwareScrollView
+        style={{ flex: 1 }}
+        contentContainerStyle={[styles.content, { paddingTop: insets.top + spacing.xl, paddingBottom: insets.bottom + spacing.lg }]}
+      >
           <View style={styles.brand}>
             <Logo width={84} height={84} />
             <Text style={styles.title}>Finance Dashboard</Text>
@@ -140,13 +140,12 @@ export default function AuthScreen() {
               onPress={handleAuth}
               style={styles.button}
               contentStyle={{ height: 54 }}
-              labelStyle={{ fontSize: 16, fontWeight: "700" }}
+              labelStyle={{ fontSize: 16, fontFamily: fonts.semibold }}
             >
               {isSignUp ? "Criar conta" : "Entrar"}
             </Button>
           </View>
-        </ScrollView>
-      </KeyboardAvoidingView>
+      </KeyboardAwareScrollView>
     </View>
   );
 }
@@ -171,7 +170,7 @@ const styles = StyleSheet.create({
     width: 260,
     height: 260,
     borderRadius: 130,
-    backgroundColor: "rgba(255,255,255,0.07)",
+    backgroundColor: "rgba(0, 217, 115, 0.07)",
   },
   content: {
     flexGrow: 1,
@@ -186,13 +185,14 @@ const styles = StyleSheet.create({
     marginTop: spacing.sm + 4,
     color: "#fff",
     fontSize: 26,
-    fontWeight: "800",
+    fontFamily: fonts.bold,
     letterSpacing: -0.5,
   },
   subtitle: {
     marginTop: 4,
     color: "rgba(255,255,255,0.75)",
     fontSize: 15,
+    fontFamily: fonts.regular,
   },
   card: {
     backgroundColor: colors.surface,
@@ -214,26 +214,26 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   segmentActive: {
-    backgroundColor: colors.surface,
-    ...shadow.card,
+    backgroundColor: colors.primary,
   },
   segmentText: {
     fontSize: 14,
-    fontWeight: "700",
+    fontFamily: fonts.semibold,
     color: colors.muted,
   },
   segmentTextActive: {
-    color: colors.text,
+    color: colors.onPrimary,
   },
   cardTitle: {
     fontSize: 22,
-    fontWeight: "800",
+    fontFamily: fonts.bold,
     color: colors.text,
   },
   cardSubtitle: {
     marginTop: 4,
     marginBottom: spacing.md,
     fontSize: 14,
+    fontFamily: fonts.regular,
     color: colors.textSecondary,
   },
   button: {

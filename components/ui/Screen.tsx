@@ -1,4 +1,4 @@
-import { colors, spacing } from "@/src/theme";
+import { colors, spacing, fonts } from "@/src/theme";
 import { StatusBar } from "expo-status-bar";
 import type { ReactNode } from "react";
 import { StyleSheet, Text, View } from "react-native";
@@ -19,7 +19,7 @@ export default function Screen({ title, subtitle, right, children }: ScreenProps
 
   return (
     <View style={[styles.container, { paddingTop: insets.top }]}>
-      <StatusBar style="dark" />
+      <StatusBar style="light" />
       {title && (
         <View style={styles.header}>
           <View style={{ flex: 1 }}>
@@ -49,14 +49,14 @@ const styles = StyleSheet.create({
   subtitle: {
     color: colors.muted,
     fontSize: 13,
-    fontWeight: "600",
+    fontFamily: fonts.semibold,
     textTransform: "uppercase",
     letterSpacing: 1,
     marginBottom: 2,
   },
   title: {
     fontSize: 30,
-    fontWeight: "800",
+    fontFamily: fonts.bold,
     color: colors.text,
     letterSpacing: -0.5,
   },

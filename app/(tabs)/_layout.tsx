@@ -1,60 +1,69 @@
-import { colors, radius, shadow } from "@/src/theme";
+import { useKeyboardHeight } from "@/hooks/useKeyboardHeight";
+import { colors, fonts, shadow } from "@/src/theme";
 import Feather from "@expo/vector-icons/Feather";
+import type { BottomTabBarProps } from "@react-navigation/bottom-tabs";
 import { Tabs } from "expo-router";
 import type { ComponentProps } from "react";
-import { StyleSheet, View } from "react-native";
+import { Pressable, StyleSheet, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
-function TabIcon({ name, color, focused }: { name: ComponentProps<typeof Feather>["name"]; color: string; focused: boolean }) {
+type FeatherIcon = ComponentProps<typeof Feather>["name"];
+
+const TAB_ICONS: Record<string, FeatherIcon> = {
+  index: "home",
+  payments: "credit-card",
+  incomes: "trending-up",
+  profile: "user",
+};
+
+/** Floating pill bar: the active tab expands into a green pill with its label, the others show only the icon. */
+function FloatingTabBar({ state, descriptors, navigation }: BottomTabBarProps) {
+  const insets = useSafeAreaInsets();
+  const keyboardHeight = useKeyboardHeight();
+
+  // The floating bar would otherwise sit over the form while typing.
+  if (keyboardHeight > 0) return null;
+
   return (
-    <View style={[styles.icon, focused && styles.iconFocused]}>
-      <Feather name={name} size={21} color={color} />
+    <View style={[styles.bar, { bottom: Math.max(insets.bottom, 12) }]}>
+      {state.routes.map((route, index) => {
+        const focused = state.index === index;
+        const title = descriptors[route.key].options.title ?? route.name;
+
+        const onPress = () => {
+          const event = navigation.emit({ type: "tabPress", target: route.key, canPreventDefault: true });
+          if (!focused && !event.defaultPrevented) navigation.navigate(route.name, route.params);
+        };
+
+        return (
+          <Pressable
+            key={route.key}
+            onPress={onPress}
+            accessibilityRole="tab"
+            accessibilityState={{ selected: focused }}
+            accessibilityLabel={title}
+            style={[styles.item, focused && styles.itemFocused]}
+          >
+            <Feather
+              name={TAB_ICONS[route.name] ?? "circle"}
+              size={focused ? 20 : 21}
+              color={focused ? colors.onPrimary : colors.muted}
+            />
+            {focused && <Text style={styles.label}>{title}</Text>}
+          </Pressable>
+        );
+      })}
     </View>
   );
 }
 
 export default function TabsLayout() {
-  const insets = useSafeAreaInsets();
-
   return (
-    <Tabs
-      screenOptions={{
-        headerShown: false,
-        tabBarActiveTintColor: colors.primary,
-        tabBarInactiveTintColor: colors.muted,
-        tabBarLabelStyle: styles.label,
-        tabBarItemStyle: styles.item,
-        tabBarStyle: [styles.bar, { bottom: Math.max(insets.bottom, 12) }],
-      }}
-    >
-      <Tabs.Screen
-        name="index"
-        options={{
-          title: "Início",
-          tabBarIcon: (props) => <TabIcon name="home" {...props} />,
-        }}
-      />
-      <Tabs.Screen
-        name="payments"
-        options={{
-          title: "Pagamentos",
-          tabBarIcon: (props) => <TabIcon name="credit-card" {...props} />,
-        }}
-      />
-      <Tabs.Screen
-        name="incomes"
-        options={{
-          title: "Receitas",
-          tabBarIcon: (props) => <TabIcon name="trending-up" {...props} />,
-        }}
-      />
-      <Tabs.Screen
-        name="profile"
-        options={{
-          title: "Perfil",
-          tabBarIcon: (props) => <TabIcon name="user" {...props} />,
-        }}
-      />
+    <Tabs screenOptions={{ headerShown: false }} tabBar={(props) => <FloatingTabBar {...props} />}>
+      <Tabs.Screen name="index" options={{ title: "Início" }} />
+      <Tabs.Screen name="payments" options={{ title: "Pagamentos" }} />
+      <Tabs.Screen name="incomes" options={{ title: "Receitas" }} />
+      <Tabs.Screen name="profile" options={{ title: "Perfil" }} />
     </Tabs>
   );
 }
@@ -62,31 +71,36 @@ export default function TabsLayout() {
 const styles = StyleSheet.create({
   bar: {
     position: "absolute",
-    marginHorizontal: 16,
-    height: 72,
-    paddingTop: 8,
-    paddingBottom: 8,
-    borderRadius: radius.lg,
-    borderTopWidth: 0,
+    left: 16,
+    right: 16,
+    height: 68,
+    borderRadius: 34,
+    paddingHorizontal: 10,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
     backgroundColor: colors.surface,
+    borderWidth: 1,
+    borderColor: colors.border,
     ...shadow.floating,
   },
   item: {
-    paddingVertical: 2,
-  },
-  label: {
-    fontSize: 11,
-    fontWeight: "700",
-    marginTop: 2,
-  },
-  icon: {
-    width: 44,
-    height: 30,
-    borderRadius: 15,
+    width: 52,
+    height: 48,
+    borderRadius: 24,
+    flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
+    gap: 8,
   },
-  iconFocused: {
-    backgroundColor: colors.primarySoft,
+  itemFocused: {
+    width: "auto",
+    paddingHorizontal: 18,
+    backgroundColor: colors.primary,
+  },
+  label: {
+    fontSize: 13,
+    fontFamily: fonts.bold,
+    color: colors.onPrimary,
   },
 });

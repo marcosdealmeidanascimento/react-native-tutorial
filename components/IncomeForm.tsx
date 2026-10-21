@@ -1,14 +1,8 @@
 import { Field } from "@/components/ui/common";
+import DateField from "@/components/ui/DateField";
 import { spacing } from "@/src/theme";
 import type { Income, IncomeInput } from "@/types/api";
-import {
-  displayDateToISO,
-  formatAmountInput,
-  formatDate,
-  maskDateInput,
-  parseAmount,
-  toISODate,
-} from "@/utils/format";
+import { displayDateToISO, formatAmountInput, formatDate, parseAmount, toISODate } from "@/utils/format";
 import { StyleSheet, View } from "react-native";
 
 export type IncomeDraft = {
@@ -35,7 +29,7 @@ export function draftToIncomeInput(draft: IncomeDraft): { input?: IncomeInput; e
 
   if (!draft.description.trim()) return { error: "Informe uma descrição." };
   if (!amount || amount <= 0) return { error: "Informe um valor maior que zero." };
-  if (!receivedDate) return { error: "Data de recebimento inválida. Use DD/MM/AAAA." };
+  if (!receivedDate) return { error: "Selecione a data de recebimento." };
 
   return { input: { description: draft.description.trim(), amount, receivedDate } };
 }
@@ -67,12 +61,10 @@ export default function IncomeForm({ draft, onChange }: Props) {
           onChangeText={(text) => update("amount", text.replace(/[^\d.,]/g, ""))}
           style={styles.half}
         />
-        <Field
+        <DateField
           label="Recebido em"
-          placeholder="DD/MM/AAAA"
-          keyboardType="number-pad"
           value={draft.receivedDate}
-          onChangeText={(text) => update("receivedDate", maskDateInput(text))}
+          onChange={(value) => update("receivedDate", value)}
           style={styles.half}
         />
       </View>

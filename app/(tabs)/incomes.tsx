@@ -6,7 +6,7 @@ import Screen, { TAB_BAR_SPACE } from "@/components/ui/Screen";
 import { useToast } from "@/components/ui/Toast";
 import { usePaginatedList } from "@/hooks/usePaginatedList";
 import { incomesApi, summaryApi } from "@/services/finance";
-import { colors, radius, shadow, spacing } from "@/src/theme";
+import { colors, radius, shadow, spacing, fonts } from "@/src/theme";
 import { formatCurrency, monthRange } from "@/utils/format";
 import { Feather } from "@expo/vector-icons";
 import { useFocusEffect } from "expo-router";
@@ -102,7 +102,7 @@ export default function IncomesScreen() {
         ListFooterComponent={loading ? <ActivityIndicator style={{ marginVertical: spacing.lg }} color={colors.primary} /> : null}
       />
 
-      <FAB icon="plus" label="Nova" color="#fff" style={styles.fab} onPress={() => setSheet({ id: null })} />
+      <FAB icon="plus" label="Nova" color={colors.onPrimary} style={styles.fab} onPress={() => setSheet({ id: null })} />
 
       <IncomeSheet
         visible={!!sheet}
@@ -149,12 +149,12 @@ const styles = StyleSheet.create({
   totalLabel: {
     fontSize: 13,
     color: colors.muted,
-    fontWeight: "600",
+    fontFamily: fonts.semibold,
   },
   totalValue: {
     marginTop: 2,
     fontSize: 24,
-    fontWeight: "800",
+    fontFamily: fonts.bold,
     color: colors.text,
     letterSpacing: -0.5,
   },

@@ -1,4 +1,4 @@
-import { colors, radius, spacing } from "@/src/theme";
+import { colors, radius, spacing, fonts } from "@/src/theme";
 import { formatCurrency } from "@/utils/format";
 import { Feather } from "@expo/vector-icons";
 import type { ComponentProps, ReactNode } from "react";
@@ -84,12 +84,13 @@ const styles = StyleSheet.create({
   },
   title: {
     fontSize: 15,
-    fontWeight: "700",
+    fontFamily: fonts.semibold,
     color: colors.text,
   },
   subtitle: {
     marginTop: 3,
     fontSize: 13,
+    fontFamily: fonts.regular,
     color: colors.muted,
   },
   right: {
@@ -98,6 +99,6 @@ const styles = StyleSheet.create({
   },
   amount: {
     fontSize: 15,
-    fontWeight: "800",
+    fontFamily: fonts.bold,
   },
 });

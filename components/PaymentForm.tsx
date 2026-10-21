@@ -1,14 +1,8 @@
 import { Field } from "@/components/ui/common";
-import { colors, radius, spacing } from "@/src/theme";
+import DateField from "@/components/ui/DateField";
+import { colors, radius, spacing, fonts } from "@/src/theme";
 import type { Payment, PaymentInput } from "@/types/api";
-import {
-  displayDateToISO,
-  formatAmountInput,
-  formatDate,
-  maskDateInput,
-  parseAmount,
-  toISODate,
-} from "@/utils/format";
+import { displayDateToISO, formatAmountInput, formatDate, parseAmount, toISODate } from "@/utils/format";
 import { Feather } from "@expo/vector-icons";
 import type { ComponentProps } from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
@@ -59,7 +53,7 @@ export function draftToPaymentInput(draft: PaymentDraft): { input?: PaymentInput
 
   if (!draft.description.trim()) return { error: "Informe uma descrição." };
   if (!amount || amount <= 0) return { error: "Informe um valor maior que zero." };
-  if (!dueDate) return { error: "Data de vencimento inválida. Use DD/MM/AAAA." };
+  if (!dueDate) return { error: "Selecione a data de vencimento." };
 
   return {
     input: {
@@ -99,12 +93,10 @@ export default function PaymentForm({ draft, onChange }: Props) {
           onChangeText={(text) => update("amount", text.replace(/[^\d.,]/g, ""))}
           style={styles.half}
         />
-        <Field
+        <DateField
           label="Vencimento"
-          placeholder="DD/MM/AAAA"
-          keyboardType="number-pad"
           value={draft.dueDate}
-          onChangeText={(text) => update("dueDate", maskDateInput(text))}
+          onChange={(value) => update("dueDate", value)}
           style={styles.half}
         />
       </View>
@@ -119,8 +111,8 @@ export default function PaymentForm({ draft, onChange }: Props) {
               onPress={() => update("method", method.value)}
               style={[styles.method, selected && styles.methodSelected]}
             >
-              <Feather name={method.icon} size={14} color={selected ? "#fff" : colors.primary} />
-              <Text style={[styles.methodText, selected && { color: "#fff" }]}>{method.value}</Text>
+              <Feather name={method.icon} size={14} color={selected ? colors.onPrimary : colors.primary} />
+              <Text style={[styles.methodText, selected && { color: colors.onPrimary }]}>{method.value}</Text>
             </Pressable>
           );
         })}
@@ -147,7 +139,7 @@ const styles = StyleSheet.create({
   },
   label: {
     fontSize: 13,
-    fontWeight: "700",
+    fontFamily: fonts.semibold,
     color: colors.textSecondary,
     marginTop: spacing.xs,
     marginBottom: spacing.sm + 2,
@@ -172,7 +164,7 @@ const styles = StyleSheet.create({
   },
   methodText: {
     fontSize: 13,
-    fontWeight: "700",
+    fontFamily: fonts.semibold,
     color: colors.primary,
   },
   switchRow: {
@@ -184,12 +176,13 @@ const styles = StyleSheet.create({
   },
   switchTitle: {
     fontSize: 15,
-    fontWeight: "700",
+    fontFamily: fonts.semibold,
     color: colors.text,
   },
   switchSubtitle: {
     marginTop: 2,
     fontSize: 13,
+    fontFamily: fonts.regular,
     color: colors.muted,
   },
 });

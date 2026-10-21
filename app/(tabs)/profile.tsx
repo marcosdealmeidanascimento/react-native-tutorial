@@ -1,25 +1,16 @@
 import { Card, confirm, Field, FormError } from "@/components/ui/common";
+import KeyboardAwareScrollView from "@/components/ui/KeyboardAwareScrollView";
 import Screen, { TAB_BAR_SPACE } from "@/components/ui/Screen";
 import { useToast } from "@/components/ui/Toast";
 import { useAuth } from "@/config/auth";
 import { usersApi } from "@/services/finance";
-import { colors, radius, shadow, spacing } from "@/src/theme";
+import { colors, radius, shadow, spacing, fonts } from "@/src/theme";
 import { initials } from "@/utils/format";
 import { Feather } from "@expo/vector-icons";
 import * as ImagePicker from "expo-image-picker";
 import { LinearGradient } from "expo-linear-gradient";
 import { useEffect, useState, type ComponentProps } from "react";
-import {
-  ActivityIndicator,
-  Image,
-  KeyboardAvoidingView,
-  Platform,
-  Pressable,
-  ScrollView,
-  StyleSheet,
-  Text,
-  View,
-} from "react-native";
+import { ActivityIndicator, Image, Pressable, StyleSheet, Text, View } from "react-native";
 import { Button } from "react-native-paper";
 
 export default function ProfileScreen() {
@@ -83,7 +74,7 @@ export default function ProfileScreen() {
   };
 
   const handleLogout = async () => {
-    if (await confirm("Sair", "Deseja encerrar sua sessão?", "Sair", false)) {
+    if (await confirm("Sair", "Deseja encerrar sua sessão?", "Sair", false, "log-out")) {
       await logout();
     }
   };
@@ -104,8 +95,7 @@ export default function ProfileScreen() {
 
   return (
     <Screen title="Perfil" subtitle="Sua conta">
-      <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : undefined} style={{ flex: 1 }}>
-        <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
+      <KeyboardAwareScrollView style={{ flex: 1 }} contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
           <LinearGradient colors={colors.heroGradient} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={styles.hero}>
             <Pressable onPress={handlePickImage} style={styles.avatarWrapper} disabled={uploading}>
               <View style={styles.avatar}>
@@ -121,7 +111,7 @@ export default function ProfileScreen() {
                 )}
               </View>
               <View style={styles.cameraBadge}>
-                <Feather name="camera" size={14} color={colors.primary} />
+                <Feather name="camera" size={14} color={colors.onPrimary} />
               </View>
             </Pressable>
             <View style={{ flex: 1 }}>
@@ -174,8 +164,7 @@ export default function ProfileScreen() {
             <View style={styles.separator} />
             <MenuItem icon="trash-2" label="Excluir conta" danger onPress={handleDeleteAccount} />
           </Card>
-        </ScrollView>
-      </KeyboardAvoidingView>
+      </KeyboardAwareScrollView>
     </Screen>
   );
 }
@@ -238,7 +227,7 @@ const styles = StyleSheet.create({
   avatarText: {
     color: "#fff",
     fontSize: 26,
-    fontWeight: "800",
+    fontFamily: fonts.bold,
   },
   avatarOverlay: {
     ...StyleSheet.absoluteFillObject,
@@ -253,7 +242,7 @@ const styles = StyleSheet.create({
     width: 28,
     height: 28,
     borderRadius: 14,
-    backgroundColor: "#fff",
+    backgroundColor: colors.primary,
     alignItems: "center",
     justifyContent: "center",
     ...shadow.card,
@@ -261,18 +250,19 @@ const styles = StyleSheet.create({
   heroName: {
     color: "#fff",
     fontSize: 20,
-    fontWeight: "800",
+    fontFamily: fonts.bold,
   },
   heroEmail: {
     marginTop: 2,
     color: "rgba(255,255,255,0.75)",
     fontSize: 14,
+    fontFamily: fonts.regular,
   },
   sectionTitle: {
     marginTop: spacing.lg,
     marginBottom: spacing.sm + 4,
     fontSize: 18,
-    fontWeight: "800",
+    fontFamily: fonts.bold,
     color: colors.text,
   },
   formCard: {
@@ -302,7 +292,7 @@ const styles = StyleSheet.create({
   menuLabel: {
     flex: 1,
     fontSize: 15,
-    fontWeight: "700",
+    fontFamily: fonts.semibold,
   },
   separator: {
     height: StyleSheet.hairlineWidth,

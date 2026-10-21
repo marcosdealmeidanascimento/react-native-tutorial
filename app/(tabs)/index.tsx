@@ -7,11 +7,10 @@ import Screen, { TAB_BAR_SPACE } from "@/components/ui/Screen";
 import { useToast } from "@/components/ui/Toast";
 import { useAuth } from "@/config/auth";
 import { incomesApi, paymentsApi, summaryApi } from "@/services/finance";
-import { colors, radius, shadow, spacing } from "@/src/theme";
+import { colors, fonts, radius, spacing } from "@/src/theme";
 import type { Income, Payment, Summary } from "@/types/api";
 import { formatCurrency, initials, monthRange } from "@/utils/format";
 import { Feather } from "@expo/vector-icons";
-import { LinearGradient } from "expo-linear-gradient";
 import { router, useFocusEffect } from "expo-router";
 import { useCallback, useState, type ComponentProps } from "react";
 import { Image, Pressable, RefreshControl, ScrollView, StyleSheet, Text, View } from "react-native";
@@ -80,25 +79,27 @@ export default function HomeScreen() {
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={handleRefresh} tintColor={colors.primary} />}
       >
         <View style={styles.topRow}>
-          <View style={{ flex: 1 }}>
-            <Text style={styles.greeting}>{greeting()},</Text>
-            <Text style={styles.name} numberOfLines={1}>
-              {firstName} 👋
-            </Text>
-          </View>
-          <Pressable onPress={() => router.push("/profile")} style={styles.avatar}>
+          <Pressable onPress={() => router.push("/profile")} style={styles.avatar} accessibilityLabel="Abrir perfil">
             {profilePicture ? (
               <Image source={{ uri: profilePicture }} style={styles.avatarImage} />
             ) : (
               <Text style={styles.avatarText}>{initials(user?.name)}</Text>
             )}
           </Pressable>
+          <View style={{ flex: 1 }}>
+            <Text style={styles.greeting}>{greeting()},</Text>
+            <Text style={styles.name} numberOfLines={1}>
+              {firstName}
+            </Text>
+          </View>
         </View>
 
         <MonthSelector month={month} onChange={setMonth} />
 
-        <LinearGradient colors={colors.heroGradient} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={styles.hero}>
-          <View style={styles.heroGlow} />
+        <View style={styles.hero}>
+          <View style={[styles.heroRing, styles.heroRingOuter]} />
+          <View style={[styles.heroRing, styles.heroRingInner]} />
+
           <Text style={styles.heroLabel}>Saldo do mês</Text>
           <Text style={styles.heroBalance} adjustsFontSizeToFit numberOfLines={1}>
             {formatCurrency(balance)}
@@ -114,11 +115,10 @@ export default function HomeScreen() {
           </Text>
 
           <View style={styles.heroStats}>
-            <HeroStat icon="arrow-down-left" label="Receitas" value={income} color="#6EE7B7" />
-            <View style={styles.heroDivider} />
-            <HeroStat icon="arrow-up-right" label="Despesas" value={expenses} color="#FCA5B4" />
+            <HeroStat icon="arrow-down-left" label="Receitas" value={income} color={colors.success} background={colors.successSoft} />
+            <HeroStat icon="arrow-up-right" label="Despesas" value={expenses} color={colors.danger} background={colors.dangerSoft} />
           </View>
-        </LinearGradient>
+        </View>
 
         {error && (
           <View style={styles.error}>
@@ -128,20 +128,8 @@ export default function HomeScreen() {
         )}
 
         <View style={styles.actions}>
-          <QuickAction
-            icon="plus"
-            label="Nova receita"
-            color={colors.success}
-            background={colors.successSoft}
-            onPress={() => setSheet({ type: "income", id: null })}
-          />
-          <QuickAction
-            icon="minus"
-            label="Novo pagamento"
-            color={colors.primary}
-            background={colors.primarySoft}
-            onPress={() => setSheet({ type: "payment", id: null })}
-          />
+          <QuickAction icon="plus" label="Nova receita" color={colors.success} onPress={() => setSheet({ type: "income", id: null })} />
+          <QuickAction icon="minus" label="Novo pagamento" color={colors.danger} onPress={() => setSheet({ type: "payment", id: null })} />
         </View>
 
         <SectionHeader title="Próximos vencimentos" action="Ver todos" onAction={() => router.push("/payments")} />
@@ -194,15 +182,17 @@ function HeroStat({
   label,
   value,
   color,
+  background,
 }: {
   icon: ComponentProps<typeof Feather>["name"];
   label: string;
   value: number;
   color: string;
+  background: string;
 }) {
   return (
     <View style={styles.heroStat}>
-      <View style={styles.heroStatIcon}>
+      <View style={[styles.heroStatIcon, { backgroundColor: background }]}>
         <Feather name={icon} size={16} color={color} />
       </View>
       <View style={{ flexShrink: 1 }}>
@@ -219,21 +209,19 @@ function QuickAction({
   icon,
   label,
   color,
-  background,
   onPress,
 }: {
   icon: ComponentProps<typeof Feather>["name"];
   label: string;
   color: string;
-  background: string;
   onPress: () => void;
 }) {
   return (
-    <Pressable onPress={onPress} style={({ pressed }) => [styles.action, pressed && { opacity: 0.85 }]}>
-      <View style={[styles.actionIcon, { backgroundColor: background }]}>
-        <Feather name={icon} size={20} color={color} />
-      </View>
-      <Text style={styles.actionLabel}>{label}</Text>
+    <Pressable onPress={onPress} style={({ pressed }) => [styles.action, pressed && { backgroundColor: colors.neutralSoft }]}>
+      <Feather name={icon} size={18} color={color} />
+      <Text style={styles.actionLabel} numberOfLines={1}>
+        {label}
+      </Text>
     </Pressable>
   );
 }
@@ -247,29 +235,28 @@ const styles = StyleSheet.create({
   topRow: {
     flexDirection: "row",
     alignItems: "center",
+    gap: spacing.sm + 4,
     marginBottom: spacing.lg - 4,
   },
   greeting: {
-    fontSize: 15,
+    fontSize: 13,
+    fontFamily: fonts.medium,
     color: colors.textSecondary,
   },
   name: {
-    fontSize: 26,
-    fontWeight: "800",
+    fontSize: 20,
+    fontFamily: fonts.bold,
     color: colors.text,
-    letterSpacing: -0.5,
+    letterSpacing: -0.4,
   },
   avatar: {
     width: 48,
     height: 48,
     borderRadius: 24,
-    backgroundColor: colors.primarySoft,
+    backgroundColor: colors.neutralSoft,
     alignItems: "center",
     justifyContent: "center",
     overflow: "hidden",
-    borderWidth: 2,
-    borderColor: colors.surface,
-    ...shadow.card,
   },
   avatarImage: {
     width: "100%",
@@ -277,90 +264,104 @@ const styles = StyleSheet.create({
   },
   avatarText: {
     color: colors.primary,
-    fontWeight: "800",
+    fontFamily: fonts.bold,
     fontSize: 16,
   },
   hero: {
-    marginTop: spacing.md,
-    borderRadius: radius.xl,
-    padding: spacing.lg,
+    marginTop: spacing.md + 4,
+    borderRadius: 28,
+    paddingHorizontal: spacing.md + 4,
+    paddingTop: spacing.lg - 2,
+    paddingBottom: spacing.md + 4,
+    alignItems: "center",
     overflow: "hidden",
-    ...shadow.floating,
+    backgroundColor: colors.hero,
+    borderWidth: 1,
+    borderColor: colors.heroBorder,
   },
-  heroGlow: {
+  heroRing: {
     position: "absolute",
+    borderWidth: 1,
+    borderColor: colors.heroRing,
+  },
+  heroRingOuter: {
     width: 220,
     height: 220,
     borderRadius: 110,
-    backgroundColor: "rgba(255,255,255,0.08)",
-    top: -90,
-    right: -60,
+    top: -110,
+    right: -70,
+  },
+  heroRingInner: {
+    width: 150,
+    height: 150,
+    borderRadius: 75,
+    top: -60,
+    right: -30,
   },
   heroLabel: {
-    color: "rgba(255,255,255,0.75)",
-    fontSize: 14,
-    fontWeight: "600",
+    color: colors.onHeroSoft,
+    fontSize: 13,
+    fontFamily: fonts.medium,
   },
   heroBalance: {
     marginTop: 6,
-    color: "#fff",
-    fontSize: 38,
-    fontWeight: "800",
-    letterSpacing: -1,
+    color: "#FFFFFF",
+    fontSize: 40,
+    fontFamily: fonts.bold,
+    letterSpacing: -1.6,
+    fontVariant: ["tabular-nums"],
   },
   progressTrack: {
+    alignSelf: "stretch",
     marginTop: spacing.md,
-    height: 8,
-    borderRadius: 4,
-    backgroundColor: "rgba(255,255,255,0.18)",
+    height: 6,
+    borderRadius: 3,
+    backgroundColor: colors.border,
     overflow: "hidden",
   },
   progressFill: {
     height: "100%",
-    borderRadius: 4,
-    backgroundColor: "#fff",
+    borderRadius: 3,
+    backgroundColor: colors.primary,
   },
   progressText: {
     marginTop: spacing.sm,
-    color: "rgba(255,255,255,0.75)",
+    color: colors.onHeroSoft,
     fontSize: 12,
+    fontFamily: fonts.regular,
   },
   heroStats: {
-    marginTop: spacing.lg - 4,
-    flexDirection: "row",
-    alignItems: "center",
-    backgroundColor: "rgba(255,255,255,0.1)",
-    borderRadius: radius.md + 2,
-    padding: spacing.sm + 6,
-  },
-  heroDivider: {
-    width: 1,
     alignSelf: "stretch",
-    backgroundColor: "rgba(255,255,255,0.18)",
-    marginHorizontal: spacing.sm + 4,
+    marginTop: spacing.md,
+    flexDirection: "row",
+    gap: spacing.sm + 2,
   },
   heroStat: {
     flex: 1,
     flexDirection: "row",
     alignItems: "center",
     gap: spacing.sm + 2,
+    backgroundColor: colors.heroTile,
+    borderRadius: 18,
+    padding: spacing.sm + 4,
   },
   heroStatIcon: {
     width: 32,
     height: 32,
     borderRadius: 16,
-    backgroundColor: "rgba(255,255,255,0.12)",
     alignItems: "center",
     justifyContent: "center",
   },
   heroStatLabel: {
-    color: "rgba(255,255,255,0.7)",
-    fontSize: 12,
+    color: colors.onHeroSoft,
+    fontSize: 11,
+    fontFamily: fonts.regular,
   },
   heroStatValue: {
-    color: "#fff",
-    fontSize: 15,
-    fontWeight: "800",
+    color: colors.text,
+    fontSize: 14,
+    fontFamily: fonts.bold,
+    fontVariant: ["tabular-nums"],
   },
   error: {
     marginTop: spacing.md,
@@ -374,34 +375,29 @@ const styles = StyleSheet.create({
   errorText: {
     flex: 1,
     color: colors.danger,
-    fontWeight: "600",
+    fontFamily: fonts.semibold,
   },
   actions: {
     flexDirection: "row",
-    gap: spacing.sm + 4,
-    marginTop: spacing.md,
+    gap: spacing.sm + 2,
+    marginTop: spacing.md + 4,
   },
   action: {
     flex: 1,
+    height: 52,
     flexDirection: "row",
     alignItems: "center",
-    gap: spacing.sm + 2,
-    backgroundColor: colors.surface,
-    borderRadius: radius.lg - 4,
-    padding: spacing.sm + 4,
-    ...shadow.card,
-  },
-  actionIcon: {
-    width: 40,
-    height: 40,
-    borderRadius: 13,
-    alignItems: "center",
     justifyContent: "center",
+    gap: spacing.sm,
+    backgroundColor: colors.surface,
+    borderRadius: 18,
+    borderWidth: 1,
+    borderColor: colors.border,
   },
   actionLabel: {
     flexShrink: 1,
     fontSize: 14,
-    fontWeight: "700",
+    fontFamily: fonts.semibold,
     color: colors.text,
   },
 });

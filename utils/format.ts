@@ -60,14 +60,6 @@ export function isOverdue(iso: string) {
   return parseISODate(iso) < today;
 }
 
-/** Masks free typing into "DD/MM/AAAA". */
-export function maskDateInput(text: string) {
-  const digits = text.replace(/\D/g, "").slice(0, 8);
-  if (digits.length <= 2) return digits;
-  if (digits.length <= 4) return `${digits.slice(0, 2)}/${digits.slice(2)}`;
-  return `${digits.slice(0, 2)}/${digits.slice(2, 4)}/${digits.slice(4)}`;
-}
-
 /** "DD/MM/AAAA" -> "YYYY-MM-DD", or null when the date is invalid. */
 export function displayDateToISO(text: string) {
   const match = /^(\d{2})\/(\d{2})\/(\d{4})$/.exec(text);

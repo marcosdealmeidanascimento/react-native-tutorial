@@ -6,7 +6,7 @@ import { STATUS_LABELS } from "@/components/ui/StatusBadge";
 import { useToast } from "@/components/ui/Toast";
 import { usePaginatedList } from "@/hooks/usePaginatedList";
 import { paymentsApi } from "@/services/finance";
-import { colors, radius, shadow, spacing } from "@/src/theme";
+import { colors, radius, shadow, spacing, fonts } from "@/src/theme";
 import type { PaymentStatus } from "@/types/api";
 import { useFocusEffect } from "expo-router";
 import { useCallback, useRef, useState } from "react";
@@ -90,7 +90,7 @@ export default function PaymentsScreen() {
         ListFooterComponent={loading ? <ActivityIndicator style={{ marginVertical: spacing.lg }} color={colors.primary} /> : null}
       />
 
-      <FAB icon="plus" label="Novo" color="#fff" style={styles.fab} onPress={() => setSheet({ id: null })} />
+      <FAB icon="plus" label="Novo" color={colors.onPrimary} style={styles.fab} onPress={() => setSheet({ id: null })} />
 
       <PaymentSheet
         visible={!!sheet}
@@ -120,16 +120,16 @@ const styles = StyleSheet.create({
     borderColor: colors.border,
   },
   filterSelected: {
-    backgroundColor: colors.text,
-    borderColor: colors.text,
+    backgroundColor: colors.primary,
+    borderColor: colors.primary,
   },
   filterText: {
     fontSize: 14,
-    fontWeight: "700",
+    fontFamily: fonts.semibold,
     color: colors.textSecondary,
   },
   filterTextSelected: {
-    color: "#fff",
+    color: colors.onPrimary,
   },
   list: {
     flexGrow: 1,

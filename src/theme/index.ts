@@ -1,7 +1,18 @@
-import { MD3LightTheme, type MD3Theme } from "react-native-paper";
+import { configureFonts, MD3DarkTheme, type MD3Theme } from "react-native-paper";
 import { colors } from "./colors";
 
 export { colors };
+
+/**
+ * Plus Jakarta Sans, loaded in app/_layout.tsx. Custom fonts ignore `fontWeight` on Android,
+ * so each weight is its own family: use these instead of fontWeight.
+ */
+export const fonts = {
+  regular: "PlusJakartaSans_400Regular",
+  medium: "PlusJakartaSans_500Medium",
+  semibold: "PlusJakartaSans_600SemiBold",
+  bold: "PlusJakartaSans_700Bold",
+};
 
 export const radius = {
   sm: 10,
@@ -20,32 +31,33 @@ export const spacing = {
 };
 
 export const shadow = {
+  // Shadows don't read on a dark background, so cards are outlined instead.
   card: {
-    shadowColor: "#1E1B4B",
-    shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.06,
-    shadowRadius: 16,
-    elevation: 3,
+    borderWidth: 1,
+    borderColor: colors.border,
   },
   floating: {
-    shadowColor: "#1E1B4B",
-    shadowOffset: { width: 0, height: 12 },
-    shadowOpacity: 0.16,
-    shadowRadius: 24,
-    elevation: 10,
+    shadowColor: "#000000",
+    shadowOffset: { width: 0, height: 18 },
+    shadowOpacity: 0.55,
+    shadowRadius: 28,
+    elevation: 12,
   },
 };
 
 export const paperTheme: MD3Theme = {
-  ...MD3LightTheme,
+  ...MD3DarkTheme,
   roundness: 4,
+  fonts: configureFonts({ config: { fontFamily: fonts.semibold } }),
   colors: {
-    ...MD3LightTheme.colors,
+    ...MD3DarkTheme.colors,
     primary: colors.primary,
-    onPrimary: "#FFFFFF",
+    onPrimary: colors.onPrimary,
     primaryContainer: colors.primarySoft,
-    onPrimaryContainer: colors.primaryDark,
-    secondary: colors.secondary,
+    onPrimaryContainer: colors.primary,
+    secondary: colors.textSecondary,
+    secondaryContainer: colors.neutralSoft,
+    onSecondaryContainer: colors.text,
     background: colors.background,
     surface: colors.surface,
     surfaceVariant: colors.neutralSoft,
@@ -53,8 +65,10 @@ export const paperTheme: MD3Theme = {
     onSurfaceVariant: colors.textSecondary,
     outline: colors.border,
     error: colors.danger,
+    inverseSurface: colors.text,
+    inverseOnSurface: colors.onPrimary,
     elevation: {
-      ...MD3LightTheme.colors.elevation,
+      ...MD3DarkTheme.colors.elevation,
       level1: colors.surface,
       level2: colors.surface,
       level3: colors.surface,

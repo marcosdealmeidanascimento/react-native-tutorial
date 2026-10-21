@@ -1,19 +1,30 @@
+import { ConfirmHost } from "@/components/ui/ConfirmDialog";
 import { ToastProvider } from "@/components/ui/Toast";
 import { AuthProvider, useAuth } from "@/config/auth";
 import { colors, paperTheme } from "@/src/theme";
+import {
+  PlusJakartaSans_400Regular,
+  PlusJakartaSans_500Medium,
+  PlusJakartaSans_600SemiBold,
+  PlusJakartaSans_700Bold,
+  useFonts,
+} from "@expo-google-fonts/plus-jakarta-sans";
 import { LinearGradient } from "expo-linear-gradient";
 import { Redirect, Stack, useSegments } from "expo-router";
+import { StatusBar } from "expo-status-bar";
 import React from "react";
 import { ActivityIndicator, StyleSheet, Text } from "react-native";
 import { PaperProvider } from "react-native-paper";
 import Logo from "../components/logo";
 
+// Uses the system font on purpose: it is also shown while Plus Jakarta Sans is still loading.
 function AppLoading() {
   return (
     <LinearGradient colors={colors.heroGradient} style={styles.container}>
+      <StatusBar style="light" />
       <Logo width={110} height={110} />
       <Text style={styles.title}>Finance Dashboard</Text>
-      <ActivityIndicator size="small" color="#fff" style={styles.loader} />
+      <ActivityIndicator size="small" color={colors.primary} style={styles.loader} />
     </LinearGradient>
   );
 }
@@ -40,6 +51,18 @@ function RouteGuard({ children }: { children: React.ReactNode }) {
 }
 
 export default function RootLayout() {
+  const [fontsLoaded, fontError] = useFonts({
+    PlusJakartaSans_400Regular,
+    PlusJakartaSans_500Medium,
+    PlusJakartaSans_600SemiBold,
+    PlusJakartaSans_700Bold,
+  });
+
+  // On a load error, carry on with the system font rather than blocking the app.
+  if (!fontsLoaded && !fontError) {
+    return <AppLoading />;
+  }
+
   return (
     <PaperProvider theme={paperTheme}>
       <AuthProvider>
@@ -50,6 +73,7 @@ export default function RootLayout() {
               <Stack.Screen name="auth" options={{ animation: "fade" }} />
             </Stack>
           </RouteGuard>
+          <ConfirmHost />
         </ToastProvider>
       </AuthProvider>
     </PaperProvider>
@@ -65,9 +89,9 @@ const styles = StyleSheet.create({
   },
   title: {
     marginTop: 16,
-    color: "#fff",
+    color: colors.text,
     fontSize: 22,
-    fontWeight: "800",
+    fontWeight: "700",
   },
   loader: {
     marginTop: 24,

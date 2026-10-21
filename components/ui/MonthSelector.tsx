@@ -1,4 +1,4 @@
-import { colors, radius, shadow } from "@/src/theme";
+import { colors, radius, shadow, fonts } from "@/src/theme";
 import { addMonths, formatMonthYear } from "@/utils/format";
 import { Feather } from "@expo/vector-icons";
 import { Pressable, StyleSheet, Text, View } from "react-native";
@@ -42,7 +42,7 @@ const styles = StyleSheet.create({
   },
   label: {
     fontSize: 15,
-    fontWeight: "700",
+    fontFamily: fonts.semibold,
     color: colors.text,
   },
 });

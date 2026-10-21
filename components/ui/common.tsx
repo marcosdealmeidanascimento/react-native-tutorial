@@ -1,7 +1,8 @@
-import { colors, radius, shadow, spacing } from "@/src/theme";
+import { useRevealFocusedInput } from "@/components/ui/KeyboardAwareScrollView";
+import { colors, radius, shadow, spacing, fonts } from "@/src/theme";
 import { Feather } from "@expo/vector-icons";
 import type { ComponentProps, ReactNode } from "react";
-import { Alert, Platform, Pressable, StyleSheet, Text, View, type ViewStyle } from "react-native";
+import { Pressable, StyleSheet, Text, View, type ViewStyle } from "react-native";
 import { TextInput, type TextInputProps } from "react-native-paper";
 
 export function Card({ children, style }: { children: ReactNode; style?: ViewStyle }) {
@@ -60,33 +61,29 @@ export function FormError({ message }: { message?: string | null }) {
   );
 }
 
-/** Outlined text input with the app's styling. */
+/**
+ * Outlined text input with the app's styling. Inside a KeyboardAwareScrollView it scrolls itself
+ * above the keyboard when focused.
+ */
 export function Field(props: TextInputProps) {
+  const revealFocusedInput = useRevealFocusedInput();
   return (
     <TextInput
       mode="outlined"
       outlineStyle={{ borderRadius: 14 }}
       outlineColor={colors.border}
       {...props}
+      onFocus={(e) => {
+        props.onFocus?.(e);
+        revealFocusedInput?.();
+      }}
       style={[{ backgroundColor: colors.surface, marginBottom: spacing.md - 4 }, props.style]}
     />
   );
 }
 Field.Icon = TextInput.Icon;
 
-/** Native confirmation dialog; falls back to window.confirm on web where Alert is a no-op. */
-export function confirm(title: string, message: string, confirmLabel = "Confirmar", destructive = true) {
-  return new Promise<boolean>((resolve) => {
-    if (Platform.OS === "web") {
-      resolve(window.confirm(`${title}\n\n${message}`));
-      return;
-    }
-    Alert.alert(title, message, [
-      { text: "Cancelar", style: "cancel", onPress: () => resolve(false) },
-      { text: confirmLabel, style: destructive ? "destructive" : "default", onPress: () => resolve(true) },
-    ]);
-  });
-}
+export { confirm } from "@/components/ui/ConfirmDialog";
 
 const styles = StyleSheet.create({
   card: {
@@ -104,12 +101,12 @@ const styles = StyleSheet.create({
   },
   sectionTitle: {
     fontSize: 18,
-    fontWeight: "800",
+    fontFamily: fonts.bold,
     color: colors.text,
   },
   sectionAction: {
     fontSize: 14,
-    fontWeight: "700",
+    fontFamily: fonts.semibold,
     color: colors.primary,
   },
   empty: {
@@ -128,12 +125,13 @@ const styles = StyleSheet.create({
   },
   emptyTitle: {
     fontSize: 16,
-    fontWeight: "700",
+    fontFamily: fonts.semibold,
     color: colors.text,
   },
   emptyDescription: {
     marginTop: 6,
     fontSize: 14,
+    fontFamily: fonts.regular,
     color: colors.muted,
     textAlign: "center",
   },
@@ -147,11 +145,12 @@ const styles = StyleSheet.create({
   },
   detailLabel: {
     fontSize: 14,
+    fontFamily: fonts.regular,
     color: colors.muted,
   },
   detailValue: {
     fontSize: 15,
-    fontWeight: "700",
+    fontFamily: fonts.semibold,
     color: colors.text,
     flexShrink: 1,
     textAlign: "right",
@@ -169,6 +168,6 @@ const styles = StyleSheet.create({
   formErrorText: {
     flex: 1,
     color: colors.danger,
-    fontWeight: "600",
+    fontFamily: fonts.semibold,
   },
 });

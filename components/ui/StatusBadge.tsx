@@ -1,4 +1,4 @@
-import { colors, radius } from "@/src/theme";
+import { colors, radius, fonts } from "@/src/theme";
 import type { Payment, PaymentStatus } from "@/types/api";
 import { isOverdue } from "@/utils/format";
 import { StyleSheet, Text, View } from "react-native";
@@ -23,7 +23,7 @@ export function paymentTone(payment: Pick<Payment, "status" | "dueDate">): Tone 
     default:
       return isOverdue(payment.dueDate)
         ? { label: "Vencido", color: colors.danger, background: colors.dangerSoft }
-        : { label: STATUS_LABELS.PENDING, color: colors.warning, background: colors.warningSoft };
+        : { label: STATUS_LABELS.PENDING, color: colors.info, background: colors.infoSoft };
   }
 }
 
@@ -59,6 +59,6 @@ const styles = StyleSheet.create({
   },
   text: {
     fontSize: 12,
-    fontWeight: "700",
+    fontFamily: fonts.semibold,
   },
 });

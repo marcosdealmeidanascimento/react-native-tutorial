@@ -8,7 +8,7 @@ import BottomSheet, { SheetCloseButton } from "@/components/ui/BottomSheet";
 import { confirm, DetailRow, FormError } from "@/components/ui/common";
 import StatusBadge from "@/components/ui/StatusBadge";
 import { paymentsApi } from "@/services/finance";
-import { colors, radius, spacing } from "@/src/theme";
+import { colors, radius, spacing, fonts } from "@/src/theme";
 import type { Payment } from "@/types/api";
 import { formatCurrency, formatDate, isOverdue } from "@/utils/format";
 import { LinearGradient } from "expo-linear-gradient";
@@ -28,9 +28,9 @@ type Props = {
 type Mode = "view" | "edit" | "create";
 
 function headerGradient(payment: Payment) {
-  if (payment.status === "PAID") return ["#0B8A61", "#12B981"] as const;
-  if (payment.status === "CANCELLED" || payment.status === "FAILED") return ["#3F4459", "#7A8099"] as const;
-  if (isOverdue(payment.dueDate)) return ["#A51D45", "#EF4565"] as const;
+  if (payment.status === "PAID") return ["#004D2C", "#007A43"] as const;
+  if (payment.status === "CANCELLED" || payment.status === "FAILED") return ["#1A2250", "#2A3366"] as const;
+  if (isOverdue(payment.dueDate)) return ["#7A1A00", "#B32A0A"] as const;
   return colors.heroGradient;
 }
 
@@ -86,13 +86,13 @@ export default function PaymentSheet({ visible, paymentId, onClose, onChanged }:
 
   const handleDelete = async () => {
     if (!payment) return;
-    const ok = await confirm("Excluir pagamento", `Deseja excluir "${payment.description}"?`, "Excluir");
+    const ok = await confirm("Excluir pagamento", `Deseja excluir "${payment.description}"?`, "Excluir", true, "trash-2");
     if (ok) run(() => paymentsApi.remove(payment.id), "Pagamento excluído");
   };
 
   const handleCancel = async () => {
     if (!payment) return;
-    const ok = await confirm("Cancelar pagamento", "O pagamento ficará marcado como cancelado.", "Cancelar pagamento");
+    const ok = await confirm("Cancelar pagamento", "O pagamento ficará marcado como cancelado.", "Cancelar pagamento", true, "x-circle");
     if (ok) run(() => paymentsApi.markCancelled(payment.id), "Pagamento cancelado");
   };
 
@@ -213,13 +213,13 @@ const styles = StyleSheet.create({
     marginTop: spacing.lg,
     color: "rgba(255,255,255,0.8)",
     fontSize: 15,
-    fontWeight: "600",
+    fontFamily: fonts.semibold,
   },
   heroAmount: {
     marginTop: 4,
     color: "#fff",
     fontSize: 38,
-    fontWeight: "800",
+    fontFamily: fonts.bold,
     letterSpacing: -1,
   },
   loadingHeader: {
